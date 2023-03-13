@@ -8,6 +8,7 @@ app.use(express.json());
 
 
 const UNSAFE_FRONT_END_URL= "*"; // Allow all origins
+// const UNSAFE_FRONT_END_URL= "http://localhost:3000";
 
 app.use(cors(
         { 
