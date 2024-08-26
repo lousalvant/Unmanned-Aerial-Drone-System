@@ -89,6 +89,7 @@ class MAVSDKDrone {
         this.GpsCall = this.TelemetryClient.subscribePosition({});
 
         this.GpsCall.on('data', function(gpsInfoResponse){
+            // console.log(gpsInfoResponse)
             self.position = gpsInfoResponse.position
             return; 
         });
@@ -105,6 +106,23 @@ class MAVSDKDrone {
         this.GpsCall.on('status', function(status) {
             console.log(status);
             return;
+        });
+    }
+
+    GotoLocation(latitude, longitude, altitude, yaw) {
+        const request = {
+            latitude_deg: latitude,
+            longitude_deg: longitude,
+            absolute_altitude_m: altitude,
+            yaw_deg: yaw
+        };
+
+        this.ActionClient.gotoLocation(request, function (err, actionResponse) {
+            if (err) {
+                console.log("Unable to execute GoToLocation:", err);
+                return;
+            }
+            console.log("GoToLocation response:", actionResponse);
         });
     }
 }

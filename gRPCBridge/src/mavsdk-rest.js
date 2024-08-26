@@ -64,9 +64,28 @@ app.get('/land', function(req, res){
 
 
 app.get('/gps', function(req, res){
+    if (drone.position && drone.position.latitude_deg && drone.position.longitude_deg) {
+        res.json(drone.position);
+    } else {
+        res.status(404).send("GPS data not available");
+    }
+});
 
-    console.log("Hellooo from gps!")
-    res.send(drone.position)
+
+app.get('/goto', function (req, res) {
+    const latitude = parseFloat(req.query.latitude);
+    const longitude = parseFloat(req.query.longitude);
+    const altitude = parseFloat(req.query.altitude);
+    const yaw = parseFloat(req.query.yaw);
+
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(altitude) || isNaN(yaw)) {
+        res.status(400).send("Invalid parameters");
+        return;
+    }
+
+    console.log(`Executing GoToLocation with latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude}, yaw: ${yaw}`);
+    drone.GotoLocation(latitude, longitude, altitude, yaw);
+    res.sendStatus(200);
 });
 
 server.listen(8081, function () {
