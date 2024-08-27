@@ -7,6 +7,7 @@ import GpsCoords from './components/gpsCoords';
 import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
+import DoOrbitButton from './components/DoOrbitButton';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <TakeoffButton/>
       <LandButton/>
       <GoToLocation />
+      <DoOrbitButton />
       <ReturnToLaunchButton />
       <GpsCoords/>
       <MapComponent />

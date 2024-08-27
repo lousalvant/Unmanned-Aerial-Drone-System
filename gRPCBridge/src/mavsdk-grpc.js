@@ -135,6 +135,25 @@ class MAVSDKDrone {
             console.log("ReturnToLaunch response:", actionResponse);
         });
     }
+
+    DoOrbit(radius, velocity, yaw_behavior, latitude, longitude, altitude) {
+        const request = {
+            radius_m: radius,
+            velocity_ms: velocity,
+            yaw_behavior: yaw_behavior, // e.g., ORBIT_YAW_BEHAVIOR_HOLD_FRONT_TO_CIRCLE_CENTER
+            latitude_deg: latitude,
+            longitude_deg: longitude,
+            absolute_altitude_m: altitude
+        };
+
+        this.ActionClient.doOrbit(request, function (err, actionResponse) {
+            if (err) {
+                console.log("Unable to execute DoOrbit:", err);
+                return;
+            }
+            console.log("DoOrbit response:", actionResponse);
+        });
+    }
 }
 
 module.exports = MAVSDKDrone;

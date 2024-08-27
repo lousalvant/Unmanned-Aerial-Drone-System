@@ -94,6 +94,24 @@ app.get('/return_to_launch', function(req, res) {
     res.sendStatus(200);
 });
 
+app.get('/do_orbit', function (req, res) {
+    const radius = parseFloat(req.query.radius);
+    const velocity = parseFloat(req.query.velocity);
+    const yaw_behavior = parseInt(req.query.yaw_behavior); // Make sure to parse the enum value correctly
+    const latitude = parseFloat(req.query.latitude);
+    const longitude = parseFloat(req.query.longitude);
+    const altitude = parseFloat(req.query.altitude);
+
+    if (isNaN(radius) || isNaN(velocity) || isNaN(yaw_behavior) || isNaN(latitude) || isNaN(longitude) || isNaN(altitude)) {
+        res.status(400).send("Invalid parameters");
+        return;
+    }
+
+    console.log(`Executing DoOrbit with radius: ${radius}, velocity: ${velocity}, yaw_behavior: ${yaw_behavior}, latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude}`);
+    drone.DoOrbit(radius, velocity, yaw_behavior, latitude, longitude, altitude);
+    res.sendStatus(200);
+});
+
 server.listen(8081, function () {
     var host = server.address().address
     var port = server.address().port
