@@ -88,6 +88,12 @@ app.get('/goto', function (req, res) {
     res.sendStatus(200);
 });
 
+app.get('/return_to_launch', function(req, res) {
+    console.log("Returning to launch...");
+    drone.ReturnToLaunch();
+    res.sendStatus(200);
+});
+
 server.listen(8081, function () {
     var host = server.address().address
     var port = server.address().port

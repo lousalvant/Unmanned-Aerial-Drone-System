@@ -125,6 +125,16 @@ class MAVSDKDrone {
             console.log("GoToLocation response:", actionResponse);
         });
     }
+
+    ReturnToLaunch() {
+        this.ActionClient.returnToLaunch({}, function(err, actionResponse) {
+            if (err) {
+                console.log("Unable to return to launch:", err);
+                return;
+            }
+            console.log("ReturnToLaunch response:", actionResponse);
+        });
+    }
 }
 
 module.exports = MAVSDKDrone;

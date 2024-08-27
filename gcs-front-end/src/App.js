@@ -6,6 +6,7 @@ import LandButton from './components/landButton';
 import GpsCoords from './components/gpsCoords';
 import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
+import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <TakeoffButton/>
       <LandButton/>
       <GoToLocation />
+      <ReturnToLaunchButton />
       <GpsCoords/>
       <MapComponent />
     </div>
