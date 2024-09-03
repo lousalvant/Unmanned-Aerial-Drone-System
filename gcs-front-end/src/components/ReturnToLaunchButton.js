@@ -10,26 +10,26 @@ const Button = styled.button`
   border-radius: 3px;
 `;
 
-function handleReturnToLaunch() {
-    fetch('http://localhost:8081/return_to_launch', {
-        method: 'GET',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        console.log('ReturnToLaunch command sent successfully');
-    })
-    .catch(error => {
-        console.error('Error in sending ReturnToLaunch command:', error);
-    });
-}
+function ReturnToLaunchButton({ port }) {
+    const handleReturnToLaunch = () => {
+        fetch(`http://localhost:${port}/return_to_launch`, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log(`ReturnToLaunch command sent successfully to drone on port ${port}`);
+        })
+        .catch(error => {
+            console.error('Error in sending ReturnToLaunch command:', error);
+        });
+    };
 
-function ReturnToLaunchButton() {
     return (
         <div>
             <Button onClick={handleReturnToLaunch}>Return to Launch</Button>

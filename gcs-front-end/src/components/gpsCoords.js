@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import styled from 'styled-components';
 
 const PrettyText = styled.label`
@@ -9,31 +8,67 @@ const PrettyText = styled.label`
   padding: 0.25em 1em;
   border: 2px solid darkred;
   border-radius: 3px;
+  display: block; /* Ensure each set of coordinates is on its own line */
 `;
 
-const GPS_REST_ENDPOINT = "http://localhost:8081/gps"
-const DEFAULT_POSITION_STATE = {"latitude_deg":0,"longitude_deg":0,"absolute_altitude_m":0,"relative_altitude_m":0}
+const GpsContainer = styled.div`
+  margin-bottom: 1em; /* Add margin at the bottom for spacing */
+  padding: 0.5em; /* Optional: Add padding for aesthetics */
+  border: 1px solid #ccc; /* Optional: Add a border around each GPS block */
+  border-radius: 5px; /* Optional: Rounded corners for each GPS block */
+  background-color: #f9f9f9; /* Optional: Light background for better readability */
+`;
 
-function GpsCoords() {
+const DEFAULT_POSITION_STATE = {
+  latitude_deg: 0,
+  longitude_deg: 0,
+  absolute_altitude_m: 0,
+  relative_altitude_m: 0,
+};
 
-    const [gpsPos, setGpsPos] = useState(DEFAULT_POSITION_STATE)
+function GpsCoords({ ports }) {
+  const [gpsData, setGpsData] = useState(
+    ports.reduce((acc, port) => {
+      acc[port] = DEFAULT_POSITION_STATE;
+      return acc;
+    }, {})
+  );
 
-    useEffect( () => {
-        
-        const timer = setInterval(async () => {
-            const res = await fetch(GPS_REST_ENDPOINT);
-            const newGpsPos = await res.json();
-            setGpsPos(newGpsPos)
-        }, 500);
+  useEffect(() => {
+    const fetchGpsData = async (port) => {
+      try {
+        const res = await fetch(`http://localhost:${port}/gps`);
+        if (!res.ok) throw new Error(`Error fetching GPS data from port ${port}`);
+        const newGpsPos = await res.json();
+        setGpsData((prevState) => ({
+          ...prevState,
+          [port]: newGpsPos,
+        }));
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-        return () => clearInterval(timer);
-    },[]);
+    const timers = ports.map((port) =>
+      setInterval(() => {
+        fetchGpsData(port);
+      }, 500)
+    );
 
-    return (
-        <div>
-            <PrettyText>{gpsPos.latitude_deg}, {gpsPos.longitude_deg}, {gpsPos.absolute_altitude_m}</PrettyText>
-        </div>
-    )
+    return () => timers.forEach(clearInterval);
+  }, [ports]);
+
+  return (
+    <div>
+      {ports.map((port) => (
+        <GpsContainer key={port}>
+          <PrettyText>
+            Drone on Port {port}: {gpsData[port].latitude_deg}, {gpsData[port].longitude_deg}, {gpsData[port].absolute_altitude_m}
+          </PrettyText>
+        </GpsContainer>
+      ))}
+    </div>
+  );
 }
 
-export default GpsCoords
+export default GpsCoords;

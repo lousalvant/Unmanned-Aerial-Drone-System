@@ -9,8 +9,8 @@ const Button = styled.button`
   border-radius: 3px;
 `;
 
-function ArmDrone() {
-    fetch('http://localhost:8081/arm', {
+function ArmDrone(port) {
+    fetch(`http://localhost:${port}/arm`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -19,15 +19,13 @@ function ArmDrone() {
       });
 }
 
-
-function ArmButton() {
-
+function ArmButton({ port }) {
     return (
         <div>
             <Button
-                onClick={() => ArmDrone()}>Arm Drone</Button>
+                onClick={() => ArmDrone(port)}>Arm Drone</Button>
         </div>
-    )
+    );
 }
 
-export default ArmButton
+export default ArmButton;

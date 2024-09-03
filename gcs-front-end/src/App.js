@@ -8,8 +8,9 @@ import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 import DoOrbitButton from './components/DoOrbitButton';
-import Sidebar from './components/Sidebar'; // Import the Sidebar component
+import Sidebar from './components/Sidebar';
 import styled from 'styled-components';
+import { useState } from 'react';
 
 const AppContainer = styled.div`
   display: flex;
@@ -24,19 +25,30 @@ const MainContent = styled.div`
 `;
 
 function App() {
+  const [selectedDronePort, setSelectedDronePort] = useState(8081); // Default port
+  const allPorts = [8081, 8082]; // Add more ports as needed
+
   return (
     <AppContainer>
       <Sidebar />
       <MainContent>
-        <ArmButton />
-        <DisarmButton />
-        <TakeoffButton />
-        <LandButton />
-        <GoToLocation />
-        <DoOrbitButton />
-        <ReturnToLaunchButton />
-        <GpsCoords />
-        <MapComponent />
+        <div>
+          <label>Select Drone: </label>
+          <select onChange={(e) => setSelectedDronePort(e.target.value)}>
+            <option value="8081">Drone 1 (Port 8081)</option>
+            <option value="8082">Drone 2 (Port 8082)</option>
+            {/* Add more options as needed */}
+          </select>
+        </div>
+        <ArmButton port={selectedDronePort} />
+        <DisarmButton port={selectedDronePort} />
+        <TakeoffButton port={selectedDronePort} />
+        <LandButton port={selectedDronePort} />
+        <GoToLocation port={selectedDronePort} />
+        <DoOrbitButton port={selectedDronePort} />
+        <ReturnToLaunchButton port={selectedDronePort} />
+        <GpsCoords ports={allPorts} />
+        <MapComponent ports={allPorts} />
       </MainContent>
     </AppContainer>
   );

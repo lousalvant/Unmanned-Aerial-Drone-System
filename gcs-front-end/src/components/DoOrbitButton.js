@@ -17,7 +17,7 @@ const Input = styled.input`
   border-radius: 3px;
 `;
 
-function DoOrbitButton() {
+function DoOrbitButton({ port }) {
     const [radius, setRadius] = useState('');
     const [velocity, setVelocity] = useState('');
     const [yawBehavior, setYawBehavior] = useState(0); // Default yaw behavior
@@ -26,7 +26,7 @@ function DoOrbitButton() {
     const [altitude, setAltitude] = useState('');
 
     const handleDoOrbit = () => {
-        fetch(`http://localhost:8081/do_orbit?radius=${radius}&velocity=${velocity}&yaw_behavior=${yawBehavior}&latitude=${latitude}&longitude=${longitude}&altitude=${altitude}`, {
+        fetch(`http://localhost:${port}/do_orbit?radius=${radius}&velocity=${velocity}&yaw_behavior=${yawBehavior}&latitude=${latitude}&longitude=${longitude}&altitude=${altitude}`, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -37,7 +37,7 @@ function DoOrbitButton() {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log('DoOrbit command sent successfully');
+            console.log(`DoOrbit command sent successfully to drone on port ${port}`);
         })
         .catch(error => {
             console.error('Error in sending DoOrbit command:', error);

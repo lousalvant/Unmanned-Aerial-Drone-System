@@ -28,30 +28,33 @@ const TELEMTRY_PACKAGE_DEFINITION = protoLoader.loadSync(
 const GRPC_HOST_NAME="127.0.0.1:50000";
 
 class MAVSDKDrone {
-
-    constructor(){
+    constructor(grpcHost) {
         this.Action = grpc.loadPackageDefinition(ACTION_PACKAGE_DEFINITION).mavsdk.rpc.action;
-        this.ActionClient = new this.Action.ActionService(GRPC_HOST_NAME, grpc.credentials.createInsecure());
+        this.ActionClient = new this.Action.ActionService(grpcHost, grpc.credentials.createInsecure());
 
         this.Telemetry = grpc.loadPackageDefinition(TELEMTRY_PACKAGE_DEFINITION).mavsdk.rpc.telemetry;
-        this.TelemetryClient = new this.Telemetry.TelemetryService(GRPC_HOST_NAME, grpc.credentials.createInsecure());
+        this.TelemetryClient = new this.Telemetry.TelemetryService(grpcHost, grpc.credentials.createInsecure());
 
-        this.position = {} // Initialize to an empty object
+        this.position = {}; // Initialize to an empty object
 
-        this.SubscribeToGps()
+        this.SubscribeToGps();
     }
 
 
-    Arm()
-    {
-        this.ActionClient.arm({}, function(err, actionResponse){
-            if(err){
+    Arm() {
+        this.ActionClient.arm({}, function (err, actionResponse) {
+            if (err) {
                 console.log("Unable to arm drone: ", err);
                 return;
             }
+            if (actionResponse.action_result.result === 'RESULT_SUCCESS') {
+                console.log("Drone armed successfully.");
+            } else {
+                console.log(`Arming failed: ${actionResponse.action_result.result_str}`);
+            }
         });
     }
-
+    
     Disarm()
     {
         this.ActionClient.disarm({}, function(err, actionResponse){

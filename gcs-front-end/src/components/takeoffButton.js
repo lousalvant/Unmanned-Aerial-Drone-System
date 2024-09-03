@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-
+import React from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
@@ -11,25 +10,33 @@ const Button = styled.button`
   border-radius: 3px;
 `;
 
-function TakeoffDrone() {
-    fetch('http://localhost:8081/takeoff', {
+function TakeoffDrone(port) {
+    fetch(`http://localhost:${port}/takeoff`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
+      })
+      .then(response => {
+          if (response.ok) {
+              console.log(`Drone on port ${port} is taking off.`);
+          } else {
+              console.error(`Failed to send takeoff command to drone on port ${port}.`);
+          }
+      })
+      .catch(error => {
+          console.error('Error sending takeoff command:', error);
       });
 }
 
-
-function TakeoffButton() {    
-
+function TakeoffButton({ port }) {    
     return (
         <div>
             <Button
-                onClick={() => TakeoffDrone()}>Takeoff Drone</Button>
+                onClick={() => TakeoffDrone(port)}>Takeoff Drone</Button>
         </div>
-    )
+    );
 }
 
-export default TakeoffButton
+export default TakeoffButton;

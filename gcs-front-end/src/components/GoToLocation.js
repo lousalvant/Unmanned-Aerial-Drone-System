@@ -17,19 +17,28 @@ const Input = styled.input`
   border-radius: 3px;
 `;
 
-function GoToLocation() {
+function GoToLocation({ port }) {
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
     const [altitude, setAltitude] = useState('');
     const [yaw, setYaw] = useState('');
 
     const handleGotoLocation = () => {
-        fetch(`http://localhost:8081/goto?latitude=${latitude}&longitude=${longitude}&altitude=${altitude}&yaw=${yaw}`, {
+        fetch(`http://localhost:${port}/goto?latitude=${latitude}&longitude=${longitude}&altitude=${altitude}&yaw=${yaw}`, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
             },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log(`GoToLocation command sent successfully to drone on port ${port}`);
+        })
+        .catch(error => {
+            console.error('Error in sending GoToLocation command:', error);
         });
     };
 

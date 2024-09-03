@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-
+import React from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
@@ -11,25 +10,33 @@ const Button = styled.button`
   border-radius: 3px;
 `;
 
-function DisarmDrone() {
-    fetch('http://localhost:8081/disarm', {
+function DisarmDrone(port) {
+    fetch(`http://localhost:${port}/disarm`, {
         method: 'GET',
         headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
         },
-      });
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log(`Drone on port ${port} is disarming.`);
+        } else {
+            console.error(`Failed to send disarm command to drone on port ${port}.`);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending disarm command:', error);
+    });
 }
 
-
-function DisarmButton() {    
-
+function DisarmButton({ port }) {
     return (
         <div>
             <Button
-                onClick={() => DisarmDrone()}>Disarm Drone</Button>
+                onClick={() => DisarmDrone(port)}>Disarm Drone</Button>
         </div>
-    )
+    );
 }
 
-export default DisarmButton
+export default DisarmButton;

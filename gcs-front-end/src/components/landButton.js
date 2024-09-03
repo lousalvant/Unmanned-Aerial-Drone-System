@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-
+import React from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
@@ -11,25 +10,33 @@ const Button = styled.button`
   border-radius: 3px;
 `;
 
-function LandDrone() {
-    fetch('http://localhost:8081/land', {
+function LandDrone(port) {
+    fetch(`http://localhost:${port}/land`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
+      })
+      .then(response => {
+          if (response.ok) {
+              console.log(`Drone on port ${port} is landing.`);
+          } else {
+              console.error(`Failed to send land command to drone on port ${port}.`);
+          }
+      })
+      .catch(error => {
+          console.error('Error sending land command:', error);
       });
 }
 
-
-function LandButton() {    
-
+function LandButton({ port }) {    
     return (
         <div>
             <Button
-                onClick={() => LandDrone()}>Land Drone</Button>
+                onClick={() => LandDrone(port)}>Land Drone</Button>
         </div>
-    )
+    );
 }
 
-export default LandButton
+export default LandButton;

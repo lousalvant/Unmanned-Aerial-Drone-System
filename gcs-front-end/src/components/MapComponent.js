@@ -8,7 +8,8 @@ import markerRetina from 'leaflet/dist/images/marker-icon-2x.png'; // Retina mar
 
 const defaultPosition = [51.505, -0.09]; // Default starting position
 
-const DroneMarker = ({ position }) => {
+// Component for displaying markers of each drone
+const DroneMarker = ({ position, droneId }) => {
   const map = useMap(); // Get the map instance
   useEffect(() => {
     if (position) {
@@ -19,37 +20,49 @@ const DroneMarker = ({ position }) => {
   return (
     <Marker position={position}>
       <Popup>
-        Drone is at latitude: {position[0]}, longitude: {position[1]}
+        Drone {droneId} is at latitude: {position[0]}, longitude: {position[1]}
       </Popup>
     </Marker>
   );
 };
 
-const MapComponent = () => {
-  const [gpsPos, setGpsPos] = useState(defaultPosition);
+const MapComponent = ({ ports }) => {
+  const [gpsPositions, setGpsPositions] = useState(
+    ports.map(() => defaultPosition) // Initialize positions to default
+  );
 
   useEffect(() => {
-    const timer = setInterval(async () => {
+    const fetchGpsData = async (port, index) => {
       try {
-        const res = await fetch("http://localhost:8081/gps");
+        const res = await fetch(`http://localhost:${port}/gps`);
         if (res.ok) {
           const data = await res.json();
           if (typeof data.latitude_deg === 'number' && typeof data.longitude_deg === 'number' &&
               data.latitude_deg !== 0 && data.longitude_deg !== 0) {
-            setGpsPos([data.latitude_deg, data.longitude_deg]);
+            setGpsPositions(prevPositions => {
+              const newPositions = [...prevPositions];
+              newPositions[index] = [data.latitude_deg, data.longitude_deg];
+              return newPositions;
+            });
           } else {
-            console.warn("Received invalid GPS data:", data);
+            console.warn(`Received invalid GPS data from port ${port}:`, data);
           }
         } else {
-          console.error("Failed to fetch GPS data, response not OK:", res.status);
+          console.error(`Failed to fetch GPS data from port ${port}, response not OK:`, res.status);
         }
       } catch (error) {
-        console.error("Error fetching GPS data:", error);
+        console.error(`Error fetching GPS data from port ${port}:`, error);
       }
-    }, 500); // Fetch every 500ms
+    };
 
-    return () => clearInterval(timer);
-  }, []);
+    const timers = ports.map((port, index) => 
+      setInterval(() => {
+        fetchGpsData(port, index);
+      }, 500)
+    );
+
+    return () => timers.forEach(clearInterval);
+  }, [ports]);
 
   // Fix marker icon issues with Leaflet in React
   const DefaultIcon = L.icon({
@@ -70,7 +83,9 @@ const MapComponent = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <DroneMarker position={gpsPos} />
+      {gpsPositions.map((position, index) => (
+        <DroneMarker key={index} position={position} droneId={index + 1} />
+      ))}
     </MapContainer>
   );
 };
