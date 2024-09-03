@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
-  color: green;
+  color: darkred;
   font-size: 1em;
   margin: 1em;
   padding: 0.25em 1em;
