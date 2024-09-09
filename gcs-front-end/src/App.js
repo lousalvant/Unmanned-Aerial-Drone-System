@@ -10,7 +10,7 @@ import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 import DoOrbitButton from './components/DoOrbitButton';
 import Sidebar from './components/Sidebar';
 import styled from 'styled-components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const AppContainer = styled.div`
   display: flex;
@@ -32,7 +32,37 @@ const ControlSectionContainer = styled.div`
 
 function App() {
   const [selectedDronePort, setSelectedDronePort] = useState(8081); // Default port
+  const [activePorts, setActivePorts] = useState([]); // Store active drone ports
   const allPorts = [8081, 8082, 8083]; // Add more ports as needed
+
+  useEffect(() => {
+    // Function to detect active ports by checking GPS data availability
+    const detectActivePorts = async () => {
+      const detectedPorts = [];
+      for (let port of allPorts) {
+        try {
+          const res = await fetch(`http://localhost:${port}/gps`);
+          if (res.ok) {
+            detectedPorts.push(port); // Add active port to the list
+          }
+        } catch (error) {
+          // Suppress the connection refused error to clean up console
+          if (error.message.includes("Failed to fetch")) {
+            console.log(`Port ${port} is not active`);
+          } else {
+            console.error(`Error checking port ${port}:`, error);
+          }
+        }
+      }
+      setActivePorts(detectedPorts);
+    };
+
+    detectActivePorts(); // Detect ports on component mount
+  }, []);
+
+  if (activePorts.length === 0) {
+    return <div>Loading drones...</div>;
+  }
 
   return (
     <AppContainer>
@@ -41,10 +71,9 @@ function App() {
         <div>
           <label>Select Drone: </label>
           <select onChange={(e) => setSelectedDronePort(e.target.value)}>
-            <option value="8081">Drone 1 (Port 8081)</option>
-            <option value="8082">Drone 2 (Port 8082)</option>
-            <option value="8083">Drone 3 (Port 8083)</option>
-            {/* Add more options as needed */}
+            {activePorts.map(port => (
+              <option key={port} value={port}>Drone (Port {port})</option>
+            ))}
           </select>
         </div>
         <ArmButton port={selectedDronePort} />
@@ -56,8 +85,8 @@ function App() {
           <DoOrbitButton port={selectedDronePort} />
         </ControlSectionContainer>
         <ReturnToLaunchButton port={selectedDronePort} />
-        <GpsCoords ports={allPorts} />
-        <MapComponent ports={allPorts} />
+        <GpsCoords ports={activePorts} />
+        <MapComponent ports={activePorts} />
       </MainContent>
     </AppContainer>
   );
