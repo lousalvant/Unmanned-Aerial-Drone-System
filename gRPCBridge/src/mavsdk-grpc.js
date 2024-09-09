@@ -25,6 +25,12 @@ const TELEMTRY_PACKAGE_DEFINITION = protoLoader.loadSync(
      oneofs: true
     });
 
+const MAVSDK_FOLLOW_ME_PROTO_PATH = __dirname + '/../MAVSDK-Proto/protos/follow_me/follow_me.proto';
+const FOLLOW_ME_PACKAGE_DEFINITION = protoLoader.loadSync(
+    MAVSDK_FOLLOW_ME_PROTO_PATH,
+    { keepCase: true, longs: String, enums: String, defaults: true, oneofs: true }
+);
+
 const GRPC_HOST_NAME="127.0.0.1:50000";
 
 class MAVSDKDrone {
@@ -35,8 +41,10 @@ class MAVSDKDrone {
         this.Telemetry = grpc.loadPackageDefinition(TELEMTRY_PACKAGE_DEFINITION).mavsdk.rpc.telemetry;
         this.TelemetryClient = new this.Telemetry.TelemetryService(grpcHost, grpc.credentials.createInsecure());
 
-        this.position = {}; // Initialize to an empty object
+        this.FollowMe = grpc.loadPackageDefinition(FOLLOW_ME_PACKAGE_DEFINITION).mavsdk.rpc.follow_me;
+        this.FollowMeClient = new this.FollowMe.FollowMeService(grpcHost, grpc.credentials.createInsecure());
 
+        this.position = {}; // Initialize to an empty object
         this.SubscribeToGps();
     }
 
@@ -155,6 +163,52 @@ class MAVSDKDrone {
                 return;
             }
             console.log("DoOrbit response:", actionResponse);
+        });
+    }
+
+    // Follow the leader using FollowMe
+    StartFollowMe() {
+        const request = {}; // No specific request data needed to start FollowMe mode
+
+        this.FollowMeClient.start(request, function (err, response) {
+            if (err) {
+                console.log("Failed to start FollowMe:", err);
+                return;
+            }
+            console.log("FollowMe started successfully.");
+        });
+    }
+
+    // Stop FollowMe
+    StopFollowMe() {
+        const request = {}; // No specific request data needed to stop FollowMe mode
+
+        this.FollowMeClient.stop(request, function (err, response) {
+            if (err) {
+                console.log("Failed to stop FollowMe:", err);
+                return;
+            }
+            console.log("FollowMe stopped successfully.");
+        });
+    }
+
+    // Set the target location for FollowMe (the leader's GPS location)
+    SetFollowMeTargetLocation(latitude_deg, longitude_deg, absolute_altitude_m) {
+        const targetLocation = {
+            latitude_deg: latitude_deg,
+            longitude_deg: longitude_deg,
+            absolute_altitude_m: absolute_altitude_m,
+            velocity_x_m_s: 0,
+            velocity_y_m_s: 0,
+            velocity_z_m_s: 0
+        };
+
+        this.FollowMeClient.setTargetLocation({ location: targetLocation }, function (err, response) {
+            if (err) {
+                console.log("Failed to set target location for FollowMe:", err);
+                return;
+            }
+            console.log("Target location set for FollowMe.");
         });
     }
 }

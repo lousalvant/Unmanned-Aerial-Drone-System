@@ -96,6 +96,29 @@ app.get('/do_orbit', function (req, res) {
     res.sendStatus(200);
 });
 
+app.post('/follow_me/start', function (req, res) {
+    drone.StartFollowMe();
+    res.sendStatus(200);
+});
+
+app.post('/follow_me/stop', function (req, res) {
+    drone.StopFollowMe();
+    res.sendStatus(200);
+});
+
+app.post('/follow_me', function (req, res) {
+    const { latitude_deg, longitude_deg, absolute_altitude_m } = req.body;
+
+    if (!latitude_deg || !longitude_deg || !absolute_altitude_m) {
+        res.status(400).send("Invalid GPS data");
+        return;
+    }
+
+    drone.SetFollowMeTargetLocation(latitude_deg, longitude_deg, absolute_altitude_m);
+    res.sendStatus(200);
+});
+
+
 server.listen(port, function () {
     var host = server.address().address;
     var port = server.address().port;
