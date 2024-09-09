@@ -17,10 +17,21 @@ const Input = styled.input`
   border-radius: 3px;
 `;
 
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #ccc;
+  padding: 20px;
+  margin: 10px;
+  border-radius: 10px;
+  width: 300px;
+`;
+
 function DoOrbitButton({ port }) {
     const [radius, setRadius] = useState('');
     const [velocity, setVelocity] = useState('');
-    const [yawBehavior, setYawBehavior] = useState(0); // Default yaw behavior
+    const [yawBehavior, setYawBehavior] = useState(0);
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
     const [altitude, setAltitude] = useState('');
@@ -45,7 +56,8 @@ function DoOrbitButton({ port }) {
     };
 
     return (
-        <div>
+        <Section>
+            <h3>Do Orbit</h3>
             <Input
                 type="text"
                 value={radius}
@@ -83,7 +95,7 @@ function DoOrbitButton({ port }) {
                 placeholder="Altitude (meters)"
             />
             <Button onClick={handleDoOrbit}>Do Orbit</Button>
-        </div>
+        </Section>
     );
 }
 

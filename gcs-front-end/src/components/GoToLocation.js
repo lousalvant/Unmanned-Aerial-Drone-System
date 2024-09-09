@@ -17,6 +17,17 @@ const Input = styled.input`
   border-radius: 3px;
 `;
 
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #ccc;
+  padding: 20px;
+  margin: 10px;
+  border-radius: 10px;
+  width: 300px;
+`;
+
 function GoToLocation({ port }) {
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
@@ -43,7 +54,8 @@ function GoToLocation({ port }) {
     };
 
     return (
-        <div>
+        <Section>
+            <h3>Go To Location</h3>
             <Input
                 type="text"
                 value={latitude}
@@ -69,7 +81,7 @@ function GoToLocation({ port }) {
                 placeholder="Yaw"
             />
             <Button onClick={handleGotoLocation}>Go To Location</Button>
-        </div>
+        </Section>
     );
 }
 
