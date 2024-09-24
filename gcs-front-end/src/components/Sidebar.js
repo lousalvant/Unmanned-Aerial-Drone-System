@@ -31,7 +31,7 @@ const MenuButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
   &:hover {
-    background-color: #1abc9c;
+    background-color: lightgray;
   }
 `;
 

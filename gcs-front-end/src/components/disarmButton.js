@@ -2,11 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
-  color: darkred;
+  color: #34495e;
   font-size: 1em;
   margin: 1em;
   padding: 0.25em 1em;
-  border: 2px solid darkred;
+  border: 2px solid #34495e;
   border-radius: 3px;
   &:hover {
     background-color: lightgray; /* Change background color on hover */
