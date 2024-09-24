@@ -118,6 +118,44 @@ app.post('/follow_me', function (req, res) {
     res.sendStatus(200);
 });
 
+app.post('/upload_mission', function (req, res) {
+    const { mission_plan } = req.body;
+  
+    if (!mission_plan || !mission_plan.mission_items) {
+      return res.status(400).send("Invalid mission plan");
+    }
+  
+    console.log("Mission plan received:", mission_plan);
+  
+    // Use the MAVSDK to upload the mission
+    drone.MissionClient.UploadMission({
+      mission_plan: {
+        mission_items: mission_plan.mission_items,
+      }
+    }, (err, response) => {
+      if (err) {
+        console.error("Failed to upload mission:", err);
+        return res.status(500).send("Failed to upload mission");
+      }
+      console.log("Mission uploaded successfully");
+      return res.send("Mission uploaded successfully");
+    });
+  });  
+
+  app.get('/start_mission', function (req, res) {
+    console.log("Starting mission...");
+
+    // Start the mission only after ensuring mission upload was successful
+    drone.StartMission();
+    drone.SubscribeMissionProgress();  // Subscribe to mission progress to track its execution
+
+    res.send("Mission started successfully");
+});
+
+app.get('/pause_mission', function (req, res) {
+    drone.PauseMission();
+    res.sendStatus(200);
+});
 
 server.listen(port, function () {
     var host = server.address().address;

@@ -31,6 +31,17 @@ const FOLLOW_ME_PACKAGE_DEFINITION = protoLoader.loadSync(
     { keepCase: true, longs: String, enums: String, defaults: true, oneofs: true }
 );
 
+const MAVSDK_MISSION_PROTO_PATH = __dirname + '/../MAVSDK-Proto/protos/mission/mission.proto';
+const MISSION_PACKAGE_DEFINITION = protoLoader.loadSync(
+    MAVSDK_MISSION_PROTO_PATH,
+    {keepCase: true,
+     longs: String,
+     enums: String,
+     defaults: true,
+     oneofs: true
+    });
+
+
 const GRPC_HOST_NAME="127.0.0.1:50000";
 
 class MAVSDKDrone {
@@ -43,6 +54,10 @@ class MAVSDKDrone {
 
         this.FollowMe = grpc.loadPackageDefinition(FOLLOW_ME_PACKAGE_DEFINITION).mavsdk.rpc.follow_me;
         this.FollowMeClient = new this.FollowMe.FollowMeService(grpcHost, grpc.credentials.createInsecure());
+
+        this.Mission = grpc.loadPackageDefinition(MISSION_PACKAGE_DEFINITION).mavsdk.rpc.mission;
+        this.MissionClient = new this.Mission.MissionService(grpcHost, grpc.credentials.createInsecure());
+
 
         this.position = {}; // Initialize to an empty object
         this.SubscribeToGps();
@@ -211,6 +226,60 @@ class MAVSDKDrone {
             console.log("Target location set for FollowMe.");
         });
     }
+
+    UploadMission(missionItems) {
+        const missionPlan = {
+            mission_plan: {
+                mission_items: missionItems
+            }
+        };
+    
+        this.MissionClient.UploadMission(missionPlan, (err, response) => {
+            if (err) {
+                console.log("Failed to upload mission:", err);
+            } else {
+                console.log("Mission uploaded successfully:", response);
+            }
+        });
+    }
+
+    StartMission() {
+        // Start the mission only if the drone is armed and the mission was uploaded
+        this.MissionClient.StartMission({}, (err, response) => {
+            if (err) {
+                console.log("Failed to start mission:", err);
+                return;
+            }
+    
+            // Check the result status from the mission response
+            if (response.mission_result && response.mission_result.result === 'RESULT_SUCCESS') {
+                console.log("Mission started successfully");
+            } else {
+                console.log("Failed to start mission: ", response.mission_result ? response.mission_result.result_str : "Unknown error");
+            }
+        });
+    }
+    
+    SubscribeMissionProgress() {
+        this.MissionClient.SubscribeMissionProgress({}, (progressError, progressResponse) => {
+            if (progressError) {
+                console.error("Failed to subscribe to mission progress:", progressError);
+                return;
+            }
+            console.log(`Mission progress: ${progressResponse.mission_progress.current} / ${progressResponse.mission_progress.total}`);
+        });
+    }
+    
+    
+    PauseMission() {
+        this.MissionClient.PauseMission({}, (err, response) => {
+            if (err) {
+                console.log("Failed to pause mission:", err);
+            } else {
+                console.log("Mission paused successfully:", response);
+            }
+        });
+    }    
 }
 
 module.exports = MAVSDKDrone;

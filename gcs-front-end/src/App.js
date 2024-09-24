@@ -8,6 +8,7 @@ import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 import DoOrbitButton from './components/DoOrbitButton';
+import MissionComponent from './components/MissionComponent';
 import Sidebar from './components/Sidebar';
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
@@ -191,12 +192,13 @@ function App() {
         <DisarmButton port={selectedDronePort} />
         <TakeoffButton port={selectedDronePort} />
         <LandButton port={selectedDronePort} />
+        <ReturnToLaunchButton port={selectedDronePort} />
 
         <ControlSectionContainer>
           <GoToLocation port={selectedDronePort} />
           <DoOrbitButton port={selectedDronePort} />
         </ControlSectionContainer>
-        <ReturnToLaunchButton port={selectedDronePort} />
+        <MissionComponent selectedDronePort={selectedDronePort} />
         <GpsCoords ports={activePorts} />
         <MapComponent ports={activePorts} />
       </MainContent>
