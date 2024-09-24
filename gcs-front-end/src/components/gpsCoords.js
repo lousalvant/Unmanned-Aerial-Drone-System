@@ -12,11 +12,11 @@ const PrettyText = styled.label`
 `;
 
 const GpsContainer = styled.div`
-  margin-bottom: 1em; /* Add margin at the bottom for spacing */
-  padding: 0.5em; /* Optional: Add padding for aesthetics */
-  border: 1px solid #ccc; /* Optional: Add a border around each GPS block */
-  border-radius: 5px; /* Optional: Rounded corners for each GPS block */
-  background-color: #f9f9f9; /* Optional: Light background for better readability */
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 `;
 
 const DEFAULT_POSITION_STATE = {

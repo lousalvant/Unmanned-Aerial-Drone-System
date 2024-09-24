@@ -1,4 +1,27 @@
 import React, { useState } from 'react';
+import styled from 'styled-components';
+
+const MissionContainer = styled.div`
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+`;
+
+const Button = styled.button`
+  color: darkred;
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border: 2px solid darkred;
+  border-radius: 3px;
+  background-color: white; /* Optional: Set background to white */
+  cursor: pointer;
+
+  &:hover {
+    background-color: lightgray; /* Change background color on hover */
+  }
+`;
 
 const MissionComponent = ({ selectedDronePort }) => {
   const [fileContent, setFileContent] = useState(null);
@@ -67,16 +90,16 @@ const MissionComponent = ({ selectedDronePort }) => {
   };
 
   return (
-    <div>
-      <h3>Upload and Start Mission</h3>
+    <MissionContainer>
+      <h3>Upload Mission</h3>
       <input type="file" accept=".json" onChange={handleFileChange} />
-      <button onClick={handleMissionUpload} disabled={!fileContent}>
+      <Button onClick={handleMissionUpload} disabled={!fileContent}>
         Upload Mission
-      </button>
-      <button onClick={startMission} disabled={!missionUploaded}>
+      </Button>
+      <Button onClick={startMission} disabled={!missionUploaded}>
         Start Mission
-      </button>
-    </div>
+      </Button>
+    </MissionContainer>
   );
 };
 
