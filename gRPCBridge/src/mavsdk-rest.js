@@ -24,26 +24,54 @@ var drone = new MAVSDKDrone(`127.0.0.1:${grpcPort}`);
 
 const port = process.argv[3] || 8081;
 
+let logs = [];
+
+// Function to add logs
+const addLog = (message) => {
+    const timestamp = new Date().toISOString();
+    logs.push(`[${timestamp}] ${message}`);
+};
+
+// Limit the log size to avoid memory overflow (optional)
+const MAX_LOGS = 1000;
+const trimLogs = () => {
+    if (logs.length > MAX_LOGS) {
+        logs.shift();
+    }
+};
+
+app.get('/logs', function (req, res) {
+    res.json(logs); // Send the logs as JSON
+});
+
 app.get('/arm', function (req, res) {
-    console.log(`Arming drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Arming drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.Arm();
     res.sendStatus(200);
 });
 
 app.get('/disarm', function (req, res) {
-    console.log(`Disarming drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Disarming drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.Disarm();
     res.sendStatus(200);
 });
 
 app.get('/takeoff', function (req, res) {
-    console.log(`Taking off drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Taking off drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.Takeoff();
     res.sendStatus(200);
 });
 
 app.get('/land', function (req, res) {
-    console.log(`Landing drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Landing drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.Land();
     res.sendStatus(200);
 });
@@ -63,17 +91,22 @@ app.get('/goto', function (req, res) {
     const yaw = parseFloat(req.query.yaw);
 
     if (isNaN(latitude) || isNaN(longitude) || isNaN(altitude) || isNaN(yaw)) {
-        res.status(400).send("Invalid parameters");
-        return;
+        return res.status(400).send("Invalid parameters");
     }
 
-    console.log(`Executing GoToLocation with latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude}, yaw: ${yaw} on drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Executing GoToLocation with latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude}, yaw: ${yaw} on drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    
+    addLog(logMessage);
+    
     drone.GotoLocation(latitude, longitude, altitude, yaw);
     res.sendStatus(200);
 });
 
 app.get('/return_to_launch', function (req, res) {
-    console.log(`Returning to launch on drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Returning to launch on drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.ReturnToLaunch();
     res.sendStatus(200);
 });
@@ -87,21 +120,28 @@ app.get('/do_orbit', function (req, res) {
     const altitude = parseFloat(req.query.altitude);
 
     if (isNaN(radius) || isNaN(velocity) || isNaN(yaw_behavior) || isNaN(latitude) || isNaN(longitude) || isNaN(altitude)) {
-        res.status(400).send("Invalid parameters");
-        return;
+        return res.status(400).send("Invalid parameters");
     }
 
-    console.log(`Executing DoOrbit with radius: ${radius}, velocity: ${velocity}, yaw_behavior: ${yaw_behavior}, latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude} on drone connected to gRPC on port ${grpcPort}`);
+    const logMessage = `Executing DoOrbit with radius: ${radius}, velocity: ${velocity}, yaw_behavior: ${yaw_behavior}, latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude} on drone connected to gRPC on port ${grpcPort}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.DoOrbit(radius, velocity, yaw_behavior, latitude, longitude, altitude);
     res.sendStatus(200);
 });
 
 app.post('/follow_me/start', function (req, res) {
+    const logMessage = 'Starting FollowMe mode.';
+    console.log(logMessage);
+    addLog(logMessage);
     drone.StartFollowMe();
     res.sendStatus(200);
 });
 
 app.post('/follow_me/stop', function (req, res) {
+    const logMessage = 'Stopping FollowMe mode.';
+    console.log(logMessage);
+    addLog(logMessage);
     drone.StopFollowMe();
     res.sendStatus(200);
 });
@@ -114,6 +154,9 @@ app.post('/follow_me', function (req, res) {
         return;
     }
 
+    const logMessage = `Setting target location for FollowMe: latitude ${latitude_deg}, longitude ${longitude_deg}, altitude ${absolute_altitude_m}`;
+    console.log(logMessage);
+    addLog(logMessage);
     drone.SetFollowMeTargetLocation(latitude_deg, longitude_deg, absolute_altitude_m);
     res.sendStatus(200);
 });
@@ -122,10 +165,15 @@ app.post('/upload_mission', function (req, res) {
     const { mission_plan } = req.body;
   
     if (!mission_plan || !mission_plan.mission_items) {
-      return res.status(400).send("Invalid mission plan");
+      const logMessage = "Invalid mission plan";
+      console.error(logMessage);
+      addLog(logMessage);  // Add log for invalid mission
+      return res.status(400).send(logMessage);
     }
   
-    console.log("Mission plan received:", mission_plan);
+    const logMessageReceived = "Mission plan received";
+    console.log(logMessageReceived);
+    addLog(logMessageReceived);  // Log when mission is received
   
     // Use the MAVSDK to upload the mission
     drone.MissionClient.UploadMission({
@@ -134,23 +182,35 @@ app.post('/upload_mission', function (req, res) {
       }
     }, (err, response) => {
       if (err) {
-        console.error("Failed to upload mission:", err);
-        return res.status(500).send("Failed to upload mission");
+        const logMessageError = "Failed to upload mission";
+        console.error(logMessageError, err);
+        addLog(logMessageError);  // Log when mission upload fails
+        return res.status(500).send(logMessageError);
       }
-      console.log("Mission uploaded successfully");
-      return res.send("Mission uploaded successfully");
+      const logMessageSuccess = "Mission uploaded successfully";
+      console.log(logMessageSuccess);
+      addLog(logMessageSuccess);  // Log when mission is uploaded successfully
+      return res.send(logMessageSuccess);
     });
-  });  
+});
+  
 
-  app.get('/start_mission', function (req, res) {
-    console.log("Starting mission...");
+app.get('/start_mission', function (req, res) {
+    const logMessageStart = "Starting mission...";
+    console.log(logMessageStart);
+    addLog(logMessageStart);  // Log when starting mission
 
     // Start the mission only after ensuring mission upload was successful
     drone.StartMission();
     drone.SubscribeMissionProgress();  // Subscribe to mission progress to track its execution
 
-    res.send("Mission started successfully");
+    const logMessageSuccess = "Mission started successfully";
+    console.log(logMessageSuccess);
+    addLog(logMessageSuccess);  // Log when mission starts successfully
+
+    res.send(logMessageSuccess);
 });
+
 
 app.get('/pause_mission', function (req, res) {
     drone.PauseMission();

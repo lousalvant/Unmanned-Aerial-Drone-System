@@ -9,6 +9,7 @@ import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 import DoOrbitButton from './components/DoOrbitButton';
 import MissionComponent from './components/MissionComponent';
+import DroneFeedback from './components/FeedbackComponent';
 import Sidebar from './components/Sidebar';
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
@@ -199,6 +200,11 @@ function App() {
           <DoOrbitButton port={selectedDronePort} />
         </ControlSectionContainer>
         <MissionComponent selectedDronePort={selectedDronePort} />
+
+        {activePorts.map((port) => (
+          <DroneFeedback key={port} port={port} />
+        ))}
+
         <GpsCoords ports={activePorts} />
         <MapComponent ports={activePorts} />
       </MainContent>
