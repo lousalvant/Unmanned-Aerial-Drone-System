@@ -87,7 +87,7 @@ function App() {
   const [followers, setFollowers] = useState([]); // Track follower drones
   const [followIntervalId, setFollowIntervalId] = useState(null); // Store interval ID for stopping later
   const [showLogs, setShowLogs] = useState(false); // State to toggle logs visibility
-  const allPorts = [8081, 8082, 8083]; // Add more ports as needed
+  const allPorts = [8081, 8082, 8083, 8084]; // Add more ports as needed
 
   useEffect(() => {
     // Detect active ports by checking GPS data availability
