@@ -28,8 +28,11 @@ const MainContent = styled.div`
 
 const ControlSectionContainer = styled.div`
   display: flex;
-  justify-content: space-around;
-  width: 100%;
+  flex-direction: row;  /* Aligns sections horizontally */
+  justify-content: flex-start;  /* Aligns sections to the left */
+  align-items: flex-start;  /* Ensures both sections align at the top */
+  gap: 10px;  /* Controls the space between the sections */
+  margin: 5px;
 `;
 
 function App() {

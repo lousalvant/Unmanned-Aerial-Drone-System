@@ -2,24 +2,57 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const MissionContainer = styled.div`
-  margin-bottom: 1em;
-  padding: 0.5em;
-  border: 2px solid #ccc;
+display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 5px; /* Further reduce padding */
+  margin: 5px;
   border-radius: 5px;
+  width: 200px; /* Set a consistent width */
+  height: 280px; /* Set a fixed height to make the section shorter */
+  overflow-y: auto; /* Ensure content doesn't overflow */
+  align-items: center; /* Center content */
+  text-align: center; /* Center text */
+`;
+
+const FileInputContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1em; /* Add margin for spacing */
+  width: 100%;
+`;
+
+const FileInput = styled.input`
+  width: 100%; /* Make sure the input stretches across the container */
+  max-width: 180px; /* Set a max width to prevent it from being too large */
 `;
 
 const Button = styled.button`
-  color: #34495e;
-  font-size: 1em;
-  margin: 1em;
-  padding: 0.25em 1em;
-  border: 2px solid #34495e;
-  border-radius: 3px;
-  background-color: white; /* Optional: Set background to white */
+  color: #fff;
+  font-size: 0.85em;
+  margin: 0.5em;
+  padding: 0.4em 0;
+  background-color: #2c3e50;
+  border: 1px solid #34495e;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+  width: 100px;
+  height: 30px;
 
   &:hover {
-    background-color: lightgray; /* Change background color on hover */
+    background-color: #34495e;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 73, 94, 0.4);
+  }
+
+  &:active {
+    background-color: #1e2d3a;
   }
 `;
 
@@ -92,7 +125,9 @@ const MissionComponent = ({ selectedDronePort }) => {
   return (
     <MissionContainer>
       <h3>Upload Mission</h3>
-      <input type="file" accept=".json" onChange={handleFileChange} />
+      <FileInputContainer>
+        <FileInput type="file" accept=".json" onChange={handleFileChange} />
+      </FileInputContainer>
       <Button onClick={handleMissionUpload} disabled={!fileContent}>
         Upload Mission
       </Button>
