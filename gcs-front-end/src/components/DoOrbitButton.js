@@ -49,7 +49,26 @@ const Section = styled.div`
   overflow-y: auto; /* Ensure content doesn't overflow */
 `;
 
-function DoOrbitButton({ port }) {
+function DoOrbitDrone(port, radius, velocity, yawBehavior, latitude, longitude, altitude) {
+    fetch(`http://localhost:${port}/do_orbit?radius=${radius}&velocity=${velocity}&yaw_behavior=${yawBehavior}&latitude=${latitude}&longitude=${longitude}&altitude=${altitude}`, {
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        console.log(`DoOrbit command sent successfully to drone on port ${port}`);
+    })
+    .catch(error => {
+        console.error('Error in sending DoOrbit command:', error);
+    });
+}
+
+function DoOrbitButton({ sendCommandToDrones }) {
     const [radius, setRadius] = useState('');
     const [velocity, setVelocity] = useState('');
     const [yawBehavior, setYawBehavior] = useState(0);
@@ -58,21 +77,8 @@ function DoOrbitButton({ port }) {
     const [altitude, setAltitude] = useState('');
 
     const handleDoOrbit = () => {
-        fetch(`http://localhost:${port}/do_orbit?radius=${radius}&velocity=${velocity}&yaw_behavior=${yawBehavior}&latitude=${latitude}&longitude=${longitude}&altitude=${altitude}`, {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            console.log(`DoOrbit command sent successfully to drone on port ${port}`);
-        })
-        .catch(error => {
-            console.error('Error in sending DoOrbit command:', error);
+        sendCommandToDrones((port) => {
+            DoOrbitDrone(port, radius, velocity, yawBehavior, latitude, longitude, altitude);
         });
     };
 

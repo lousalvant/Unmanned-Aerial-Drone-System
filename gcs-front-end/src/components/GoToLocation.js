@@ -49,30 +49,34 @@ const Section = styled.div`
   overflow-y: auto; /* Ensure content doesn't overflow */
 `;
 
+function GoToLocationDrone(port, latitude, longitude, altitude, yaw) {
+    fetch(`http://localhost:${port}/goto?latitude=${latitude}&longitude=${longitude}&altitude=${altitude}&yaw=${yaw}`, {
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        console.log(`GoToLocation command sent successfully to drone on port ${port}`);
+    })
+    .catch(error => {
+        console.error('Error in sending GoToLocation command:', error);
+    });
+}
 
-
-function GoToLocation({ port }) {
+function GoToLocation({ sendCommandToDrones }) {
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
     const [altitude, setAltitude] = useState('');
     const [yaw, setYaw] = useState('');
 
     const handleGotoLocation = () => {
-        fetch(`http://localhost:${port}/goto?latitude=${latitude}&longitude=${longitude}&altitude=${altitude}&yaw=${yaw}`, {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            console.log(`GoToLocation command sent successfully to drone on port ${port}`);
-        })
-        .catch(error => {
-            console.error('Error in sending GoToLocation command:', error);
+        sendCommandToDrones((port) => {
+            GoToLocationDrone(port, latitude, longitude, altitude, yaw);
         });
     };
 

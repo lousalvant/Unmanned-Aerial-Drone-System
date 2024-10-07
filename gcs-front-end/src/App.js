@@ -3,7 +3,7 @@ import ArmButton from './components/armButton';
 import DisarmButton from './components/disarmButton';
 import TakeoffButton from './components/takeoffButton';
 import LandButton from './components/landButton';
-import GpsCoords from './components/gpsCoords';
+// import GpsCoords from './components/gpsCoords';
 import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
@@ -112,6 +112,17 @@ function App() {
 
     detectActivePorts(); // Detect ports on component mount
   }, []);
+
+  const sendCommandToDrones = (commandFunction) => {
+    if (selectedDronePort === -1) { // If "All Drones" is selected
+      activePorts.forEach((port) => {
+        commandFunction(port); // Send command to all active drones
+      });
+    } else {
+      commandFunction(selectedDronePort); // Send command to the selected drone
+    }
+  };
+  
 
   // Function to handle the leader selection
   const handleLeaderSelection = (event) => {
@@ -231,26 +242,28 @@ function App() {
 
         <div>
           <label>Select Drone to Control: </label>
-          <select onChange={(e) => setSelectedDronePort(e.target.value)}>
+          <select onChange={(e) => setSelectedDronePort(parseInt(e.target.value))}>
+            <option value="-1">All Drones</option> {/* Add this option */}
             {activePorts.map((port) => (
               <option key={port} value={port}>Drone (Port {port})</option>
             ))}
           </select>
         </div>
 
+
         <ControlSectionContainer>
 
           <CommandSectionContainer>
-            <ArmButton port={selectedDronePort} />
-            <DisarmButton port={selectedDronePort} />
-            <TakeoffButton port={selectedDronePort} />
-            <LandButton port={selectedDronePort} />
-            <ReturnToLaunchButton port={selectedDronePort} />
+            <ArmButton sendCommandToDrones={sendCommandToDrones} />
+            <DisarmButton sendCommandToDrones={sendCommandToDrones} />
+            <TakeoffButton sendCommandToDrones={sendCommandToDrones} />
+            <LandButton sendCommandToDrones={sendCommandToDrones} />
+            <ReturnToLaunchButton sendCommandToDrones={sendCommandToDrones} />
           </CommandSectionContainer>
 
-          <GoToLocation port={selectedDronePort} />
-          <DoOrbitButton port={selectedDronePort} />
-          <MissionComponent selectedDronePort={selectedDronePort} />
+          <GoToLocation sendCommandToDrones={sendCommandToDrones} />
+          <DoOrbitButton sendCommandToDrones={sendCommandToDrones} />
+          <MissionComponent sendCommandToDrones={sendCommandToDrones} />
         </ControlSectionContainer>
 
         {/* Toggle logs visibility */}

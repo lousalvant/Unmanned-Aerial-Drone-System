@@ -49,13 +49,13 @@ function TakeoffDrone(port) {
       });
 }
 
-function TakeoffButton({ port }) {    
-    return (
-        <div>
-            <Button
-                onClick={() => TakeoffDrone(port)}>Takeoff</Button>
-        </div>
-    );
+function TakeoffButton({ sendCommandToDrones }) {
+  return (
+    <div>
+      <Button
+        onClick={() => sendCommandToDrones(TakeoffDrone)}>Takeoff</Button>
+    </div>
+  );
 }
 
 export default TakeoffButton;

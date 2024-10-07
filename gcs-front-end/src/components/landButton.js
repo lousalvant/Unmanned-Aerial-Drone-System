@@ -49,13 +49,12 @@ function LandDrone(port) {
       });
 }
 
-function LandButton({ port }) {    
-    return (
-        <div>
-            <Button
-                onClick={() => LandDrone(port)}>Land</Button>
-        </div>
-    );
+function LandButton({ sendCommandToDrones }) {
+  return (
+      <div>
+          <Button onClick={() => sendCommandToDrones(LandDrone)}>Land</Button>
+      </div>
+  );
 }
 
 export default LandButton;

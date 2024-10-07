@@ -49,13 +49,13 @@ function DisarmDrone(port) {
     });
 }
 
-function DisarmButton({ port }) {
+function DisarmButton({ sendCommandToDrones }) {
     return (
-        <div>
-            <Button
-                onClick={() => DisarmDrone(port)}>Disarm</Button>
-        </div>
+      <div>
+        <Button
+          onClick={() => sendCommandToDrones(DisarmDrone)}>Disarm</Button>
+      </div>
     );
-}
+  }
 
 export default DisarmButton;

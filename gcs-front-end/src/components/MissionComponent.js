@@ -2,30 +2,29 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const MissionContainer = styled.div`
-display: flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   border: 1px solid #ccc;
-  padding: 5px; /* Further reduce padding */
+  padding: 5px;
   margin: 5px;
   border-radius: 5px;
-  width: 200px; /* Set a consistent width */
-  height: 280px; /* Set a fixed height to make the section shorter */
-  overflow-y: auto; /* Ensure content doesn't overflow */
-  align-items: center; /* Center content */
-  text-align: center; /* Center text */
+  width: 200px;
+  height: 280px;
+  overflow-y: auto;
+  text-align: center;
 `;
 
 const FileInputContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 1em; /* Add margin for spacing */
+  margin-bottom: 1em;
   width: 100%;
 `;
 
 const FileInput = styled.input`
-  width: 100%; /* Make sure the input stretches across the container */
-  max-width: 180px; /* Set a max width to prevent it from being too large */
+  width: 100%;
+  max-width: 180px;
 `;
 
 const Button = styled.button`
@@ -38,7 +37,6 @@ const Button = styled.button`
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
-
   width: 100px;
   height: 30px;
 
@@ -56,7 +54,7 @@ const Button = styled.button`
   }
 `;
 
-const MissionComponent = ({ selectedDronePort }) => {
+const MissionComponent = ({ sendCommandToDrones }) => {
   const [fileContent, setFileContent] = useState(null);
   const [missionUploaded, setMissionUploaded] = useState(false);
 
@@ -68,7 +66,7 @@ const MissionComponent = ({ selectedDronePort }) => {
       reader.onload = (e) => {
         try {
           const jsonContent = JSON.parse(e.target.result);
-          setFileContent(jsonContent); // Store the parsed mission
+          setFileContent(jsonContent);
         } catch (error) {
           alert('Invalid JSON file');
         }
@@ -77,14 +75,14 @@ const MissionComponent = ({ selectedDronePort }) => {
     }
   };
 
-  // Handle mission upload to the drone
-  const handleMissionUpload = async () => {
+  // Handle mission upload
+  const handleMissionUpload = async (port) => {
     if (!fileContent) {
       alert('No mission file uploaded');
       return;
     }
 
-    const response = await fetch(`http://localhost:${selectedDronePort}/upload_mission`, {
+    const response = await fetch(`http://localhost:${port}/upload_mission`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,22 +91,22 @@ const MissionComponent = ({ selectedDronePort }) => {
     });
 
     if (response.ok) {
-      console.log('Mission uploaded successfully');
+      console.log(`Mission uploaded successfully to drone on port ${port}`);
       setMissionUploaded(true);
     } else {
-      console.error('Failed to upload mission');
+      console.error(`Failed to upload mission to drone on port ${port}`);
       setMissionUploaded(false);
     }
   };
 
-  // Start the mission after upload
-  const startMission = async () => {
+  // Start the mission
+  const startMission = async (port) => {
     if (!missionUploaded) {
       alert('No mission uploaded to start');
       return;
     }
 
-    const response = await fetch(`http://localhost:${selectedDronePort}/start_mission`, {
+    const response = await fetch(`http://localhost:${port}/start_mission`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -116,9 +114,9 @@ const MissionComponent = ({ selectedDronePort }) => {
     });
 
     if (response.ok) {
-      console.log('Mission started successfully');
+      console.log(`Mission started successfully on drone on port ${port}`);
     } else {
-      console.error('Failed to start mission');
+      console.error(`Failed to start mission on drone on port ${port}`);
     }
   };
 
@@ -128,10 +126,10 @@ const MissionComponent = ({ selectedDronePort }) => {
       <FileInputContainer>
         <FileInput type="file" accept=".json" onChange={handleFileChange} />
       </FileInputContainer>
-      <Button onClick={handleMissionUpload} disabled={!fileContent}>
+      <Button onClick={() => sendCommandToDrones(handleMissionUpload)} disabled={!fileContent}>
         Upload Mission
       </Button>
-      <Button onClick={startMission} disabled={!missionUploaded}>
+      <Button onClick={() => sendCommandToDrones(startMission)} disabled={!missionUploaded}>
         Start Mission
       </Button>
     </MissionContainer>

@@ -38,13 +38,13 @@ function ArmDrone(port) {
       });
 }
 
-function ArmButton({ port }) {
-    return (
-        <div>
-            <Button
-                onClick={() => ArmDrone(port)}>Arm</Button>
-        </div>
-    );
+function ArmButton({ sendCommandToDrones }) {
+  return (
+      <div>
+          <Button
+              onClick={() => sendCommandToDrones(ArmDrone)}>Arm</Button>
+      </div>
+  );
 }
 
 export default ArmButton;
