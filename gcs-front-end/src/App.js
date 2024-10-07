@@ -80,6 +80,38 @@ const GridContainer = styled.div`
   padding: 20px; /* Add padding to create space around the grid */
 `;
 
+const LeaderFollowerSection = styled.div`
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 20px;
+  margin-bottom: 20px; /* Add margin to create space */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 300px;
+`;
+
+const LeaderFollowerTitle = styled.h3`
+  margin-bottom: 10px;
+`;
+
+const SelectLeader = styled.select`
+  margin-bottom: 10px;
+  padding: 5px;
+  width: 100%;
+`;
+
+const CheckboxContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const FollowerCheckbox = styled.div`
+  margin-bottom: 5px;
+`;
+
 function App() {
   const [selectedDronePort, setSelectedDronePort] = useState(8081); // Default port
   const [activePorts, setActivePorts] = useState([]); // Store active drone ports
@@ -208,37 +240,42 @@ function App() {
     <AppContainer>
       <Sidebar ports={activePorts} />
       <MainContent>
-        <div>
-          <label>Select Leader: </label>
-          <select onChange={handleLeaderSelection} value={leaderPort || ''}>
-            <option value="" disabled>Select a leader drone</option>
+
+         {/* Leader-Follower Section */}
+         <LeaderFollowerSection>
+          <LeaderFollowerTitle>Leader-Follower Mode</LeaderFollowerTitle>
+          <div>
+            <label>Select Leader: </label>
+            <SelectLeader onChange={handleLeaderSelection} value={leaderPort || ''}>
+              <option value="" disabled>Select a leader drone</option>
+              {activePorts.map((port) => (
+                <option key={port} value={port}>Drone (Port {port})</option>
+              ))}
+            </SelectLeader>
+          </div>
+
+        <CheckboxContainer>
+            <h4>Select Drones to Follow</h4>
             {activePorts.map((port) => (
-              <option key={port} value={port}>Drone (Port {port})</option>
+              <FollowerCheckbox key={port}>
+                <input
+                  type="checkbox"
+                  checked={followers.includes(port)}
+                  onChange={() => toggleFollower(port)}
+                  disabled={port === leaderPort} // Disable selection for leader
+                />
+                <label>Drone (Port {port})</label>
+              </FollowerCheckbox>
             ))}
-          </select>
-        </div>
+          </CheckboxContainer>
 
-        <div>
-          <h3>Select Drones to Follow</h3>
-          {activePorts.map((port) => (
-            <div key={port}>
-              <input
-                type="checkbox"
-                checked={followers.includes(port)}
-                onChange={() => toggleFollower(port)}
-                disabled={port === leaderPort} // Disable selection for leader
-              />
-              <label>Drone (Port {port})</label>
-            </div>
-          ))}
-        </div>
-
-        <button onClick={handleFollowMode} disabled={!leaderPort || followers.length === 0}>
-          Start Follow Mode
-        </button>
-        <button onClick={stopFollowMode} disabled={!followIntervalId}>
-          Stop Follow Mode
-        </button>
+          <Button onClick={handleFollowMode} disabled={!leaderPort || followers.length === 0}>
+            Start Follow
+          </Button>
+          <Button onClick={stopFollowMode} disabled={!followIntervalId}>
+            Stop Follow
+          </Button>
+        </LeaderFollowerSection>
 
         <div>
           <label>Select Drone to Control: </label>
