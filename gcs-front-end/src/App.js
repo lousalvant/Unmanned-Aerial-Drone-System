@@ -14,6 +14,34 @@ import Sidebar from './components/Sidebar';
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
 
+const Button = styled.button`
+  color: #fff;
+  font-size: 0.85em;
+  margin: 0.5em;
+  padding: 0.4em 0;
+  background-color: #2c3e50;
+  border: 1px solid #34495e;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+  width: 100px;
+  height: 30px;
+
+  &:hover {
+    background-color: #34495e;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 73, 94, 0.4);
+  }
+
+  &:active {
+    background-color: #1e2d3a;
+  }
+`;
+
 const AppContainer = styled.div`
   display: flex;
 `;
@@ -26,13 +54,30 @@ const MainContent = styled.div`
   align-items: center;
 `;
 
+const CommandSectionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-right: 20px;
+  margin-top: 30px;
+`;
+
 const ControlSectionContainer = styled.div`
   display: flex;
-  flex-direction: row;  /* Aligns sections horizontally */
-  justify-content: flex-start;  /* Aligns sections to the left */
-  align-items: flex-start;  /* Ensures both sections align at the top */
-  gap: 10px;  /* Controls the space between the sections */
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
   margin: 5px;
+`;
+
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Ensure grid layout */
+  gap: 20px; /* Add space between the logs */
+  justify-content: center; /* Center the logs */
+  width: 100%; /* Take up the full available width */
+  padding: 20px; /* Add padding to create space around the grid */
 `;
 
 function App() {
@@ -41,6 +86,7 @@ function App() {
   const [leaderPort, setLeaderPort] = useState(null); // Track the leader drone port
   const [followers, setFollowers] = useState([]); // Track follower drones
   const [followIntervalId, setFollowIntervalId] = useState(null); // Store interval ID for stopping later
+  const [showLogs, setShowLogs] = useState(false); // State to toggle logs visibility
   const allPorts = [8081, 8082, 8083]; // Add more ports as needed
 
   useEffect(() => {
@@ -149,7 +195,7 @@ function App() {
 
   return (
     <AppContainer>
-      <Sidebar />
+      <Sidebar ports={activePorts} />
       <MainContent>
         <div>
           <label>Select Leader: </label>
@@ -192,23 +238,34 @@ function App() {
           </select>
         </div>
 
-        <ArmButton port={selectedDronePort} />
-        <DisarmButton port={selectedDronePort} />
-        <TakeoffButton port={selectedDronePort} />
-        <LandButton port={selectedDronePort} />
-        <ReturnToLaunchButton port={selectedDronePort} />
-
         <ControlSectionContainer>
+
+          <CommandSectionContainer>
+            <ArmButton port={selectedDronePort} />
+            <DisarmButton port={selectedDronePort} />
+            <TakeoffButton port={selectedDronePort} />
+            <LandButton port={selectedDronePort} />
+            <ReturnToLaunchButton port={selectedDronePort} />
+          </CommandSectionContainer>
+
           <GoToLocation port={selectedDronePort} />
           <DoOrbitButton port={selectedDronePort} />
+          <MissionComponent selectedDronePort={selectedDronePort} />
         </ControlSectionContainer>
-        <MissionComponent selectedDronePort={selectedDronePort} />
 
-        {activePorts.map((port) => (
-          <DroneFeedback key={port} port={port} />
-        ))}
+        {/* Toggle logs visibility */}
+        <Button onClick={() => setShowLogs(!showLogs)}>
+          {showLogs ? 'Hide All Logs' : 'Show All Logs'}
+        </Button>
 
-        <GpsCoords ports={activePorts} />
+        {/* Grid for logs */}
+        <GridContainer>
+          {activePorts.map((port) => (
+            <DroneFeedback key={port} port={port} isVisible={showLogs} />
+          ))}
+        </GridContainer>
+
+        {/* <GpsCoords ports={activePorts} /> */}
         <MapComponent ports={activePorts} />
       </MainContent>
     </AppContainer>

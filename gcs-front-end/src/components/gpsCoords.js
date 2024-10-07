@@ -2,21 +2,24 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const PrettyText = styled.label`
-  color: #34495e;
-  font-size: 1em;
-  margin: 1em;
-  padding: 0.25em 1em;
-  border: 2px solid #34495e;
-  border-radius: 3px;
+  color: #ffffff; /* Adjust for better readability in sidebar */
+  font-size: 0.8em; /* Smaller font size to fit the sidebar */
+  margin: 0.5em; /* Reduce margin */
+  padding: 0.5em;
   display: block; /* Ensure each set of coordinates is on its own line */
+  word-wrap: break-word; /* Allow long lines to break */
 `;
 
 const GpsContainer = styled.div`
-  margin-bottom: 1em;
+  margin-top: 20px;
+  margin-bottom: 0.5em;
   padding: 0.5em;
-  border: 1px solid #ccc;
+  background-color: #34495e; /* Adjust background for better sidebar integration */
   border-radius: 5px;
-  background-color: #f9f9f9;
+  text-align: left; /* Align text to the left */
+  width: 220px; /* Fixed width */
+  height: 110px; /* Fixed height */
+  overflow: auto; /* Add scrolling if content exceeds fixed height */
 `;
 
 const DEFAULT_POSITION_STATE = {
@@ -63,7 +66,13 @@ function GpsCoords({ ports }) {
       {ports.map((port) => (
         <GpsContainer key={port}>
           <PrettyText>
-            Drone on Port {port}: {gpsData[port].latitude_deg}, {gpsData[port].longitude_deg}, {gpsData[port].absolute_altitude_m}
+            Drone {port}:
+            <br />
+            Lat: {gpsData[port].latitude_deg.toFixed(4)}
+            <br />
+            Long: {gpsData[port].longitude_deg.toFixed(4)}
+            <br />
+            Alt: {gpsData[port].absolute_altitude_m}m
           </PrettyText>
         </GpsContainer>
       ))}

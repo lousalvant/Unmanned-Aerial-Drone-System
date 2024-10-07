@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import TimeDisplay from './TimeDisplay';
+import GpsCoords from '../components/gpsCoords';
 
 const SidebarContainer = styled.div`
   width: 250px;
@@ -10,13 +11,13 @@ const SidebarContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 10px;  /* Reduce padding */
   box-shadow: 2px 0px 5px rgba(0,0,0,0.1);
 `;
 
 const Title = styled.h1`
   font-size: 1.5em;
-  margin-bottom: 2em;
+  margin-bottom: 1em;
 `;
 
 const MenuButton = styled.button`
@@ -35,7 +36,7 @@ const MenuButton = styled.button`
   }
 `;
 
-function Sidebar() {
+const Sidebar = ({ ports }) => {
   return (
     <SidebarContainer>
       <Title>Drone Dashboard</Title>
@@ -43,8 +44,9 @@ function Sidebar() {
       <MenuButton>Overview</MenuButton>
       <MenuButton>Documentation</MenuButton>
       <MenuButton>About</MenuButton>
+      <GpsCoords ports={ports} /> {/* Move GpsCoords into Sidebar */}
     </SidebarContainer>
   );
-}
+};
 
 export default Sidebar;
