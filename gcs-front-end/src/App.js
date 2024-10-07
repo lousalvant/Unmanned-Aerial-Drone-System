@@ -44,6 +44,7 @@ const Button = styled.button`
 
 const AppContainer = styled.div`
   display: flex;
+  height: 100vh;
 `;
 
 const MainContent = styled.div`
@@ -51,7 +52,9 @@ const MainContent = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
+  overflow-y: auto;
 `;
 
 const CommandSectionContainer = styled.div`
@@ -110,6 +113,20 @@ const CheckboxContainer = styled.div`
 
 const FollowerCheckbox = styled.div`
   margin-bottom: 5px;
+`;
+
+const MapContainer = styled.div`
+  flex-grow: 1; /* Allow the map to grow and take available space */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const MapComponentStyled = styled(MapComponent)`
+  width: 100%;
+  height: 100%;
+  max-height: 100vh; /* Ensure it does not exceed the viewport height */
 `;
 
 function App() {
@@ -316,7 +333,9 @@ function App() {
         </GridContainer>
 
         {/* <GpsCoords ports={activePorts} /> */}
-        <MapComponent ports={activePorts} />
+        <MapContainer>
+          <MapComponentStyled ports={activePorts} />
+        </MapContainer>
       </MainContent>
     </AppContainer>
   );
