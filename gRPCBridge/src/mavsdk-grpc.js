@@ -181,6 +181,20 @@ class MAVSDKDrone {
         });
     }
 
+    Hold() {
+        this.ActionClient.hold({}, function (err, actionResponse) {
+            if (err) {
+                console.log("Unable to send Hold command: ", err);
+                return;
+            }
+            if (actionResponse.action_result.result === 'RESULT_SUCCESS') {
+                console.log("Hold command sent successfully.");
+            } else {
+                console.log(`Failed to send Hold command: ${actionResponse.action_result.result_str}`);
+            }
+        });
+    }    
+
     // Follow the leader using FollowMe
     StartFollowMe() {
         const request = {}; // No specific request data needed to start FollowMe mode

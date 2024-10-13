@@ -8,6 +8,7 @@ import MapComponent from './components/MapComponent';
 import GoToLocation from './components/GoToLocation';
 import ReturnToLaunchButton from './components/ReturnToLaunchButton';
 import DoOrbitButton from './components/DoOrbitButton';
+import HoldButton from './components/HoldButton';
 import MissionComponent from './components/MissionComponent';
 import DroneFeedback from './components/FeedbackComponent';
 import Sidebar from './components/Sidebar';
@@ -313,6 +314,7 @@ function App() {
             <TakeoffButton sendCommandToDrones={sendCommandToDrones} />
             <LandButton sendCommandToDrones={sendCommandToDrones} />
             <ReturnToLaunchButton sendCommandToDrones={sendCommandToDrones} />
+            <HoldButton sendCommandToDrones={sendCommandToDrones} />
           </CommandSectionContainer>
 
           <GoToLocation sendCommandToDrones={sendCommandToDrones} />

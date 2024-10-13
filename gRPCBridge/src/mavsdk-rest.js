@@ -130,6 +130,15 @@ app.get('/do_orbit', function (req, res) {
     res.sendStatus(200);
 });
 
+app.get('/hold', function (req, res) {
+    const logMessage = 'Sending Hold (Loiter) command to drone.';
+    console.log(logMessage);
+    addLog(logMessage);
+
+    drone.Hold();
+    res.send('Hold command sent successfully');
+});
+
 app.post('/follow_me/start', function (req, res) {
     const logMessage = 'Starting FollowMe mode.';
     console.log(logMessage);
