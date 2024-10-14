@@ -84,6 +84,38 @@ app.get('/gps', function (req, res) {
     }
 });
 
+app.get('/health', function (req, res) {
+    if (drone.health) {
+        res.json(drone.health);
+    } else {
+        res.status(404).send("Health data not available");
+    }
+});
+
+app.get('/status_text', function (req, res) {
+    if (drone.statusText) {
+        res.json(drone.statusText);
+    } else {
+        res.status(404).send("StatusText data not available");
+    }
+});
+
+app.get('/battery', function (req, res) {
+    if (drone.battery) {
+        res.json(drone.battery);
+    } else {
+        res.status(404).send("Battery data not available");
+    }
+});
+
+app.get('/flight_mode', function (req, res) {
+    if (drone.flightMode) {
+        res.json({ flight_mode: drone.flightMode });
+    } else {
+        res.status(404).send("Flight mode data not available");
+    }
+});
+
 app.get('/goto', function (req, res) {
     const latitude = parseFloat(req.query.latitude);
     const longitude = parseFloat(req.query.longitude);

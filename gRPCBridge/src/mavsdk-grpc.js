@@ -59,8 +59,17 @@ class MAVSDKDrone {
         this.MissionClient = new this.Mission.MissionService(grpcHost, grpc.credentials.createInsecure());
 
 
-        this.position = {}; // Initialize to an empty object
+        this.position = {};
+        this.health = {};
+        this.flightMode = {};
+        this.statusText = {};
+        this.battery = {};
+
         this.SubscribeToGps();
+        this.SubscribeToHealth();
+        this.SubscribeToStatusText();
+        this.SubscribeToBattery();
+        this.SubscribeToFlightMode();
     }
 
 
@@ -134,6 +143,59 @@ class MAVSDKDrone {
             return;
         });
     }
+
+    SubscribeToHealth() {
+        const self = this;
+        this.HealthCall = this.TelemetryClient.subscribeHealth({});
+        this.HealthCall.on('data', function(healthResponse) {
+            self.health = healthResponse.health;
+            console.log('Health Update:', self.health);
+        });
+    
+        this.HealthCall.on('end', function() {
+            console.log('Health subscription ended');
+        });
+    
+        this.HealthCall.on('error', function(e) {
+            console.log(e);
+        });
+    }    
+
+    SubscribeToStatusText() {
+        const self = this;
+        this.StatusTextCall = this.TelemetryClient.subscribeStatusText({});
+        this.StatusTextCall.on('data', function (statusTextResponse) {
+            self.statusText = statusTextResponse.status_text;
+        });
+        this.StatusTextCall.on('error', function (e) {
+            console.error("Error subscribing to StatusText:", e);
+        });
+    }
+
+    SubscribeToBattery() {
+        const self = this;
+        this.BatteryCall = this.TelemetryClient.subscribeBattery({});
+        this.BatteryCall.on('data', function(batteryResponse) {
+            self.battery = batteryResponse.battery;
+        });
+    }
+
+    SubscribeToFlightMode() {
+        const self = this;
+        this.FlightModeCall = this.TelemetryClient.subscribeFlightMode({});
+        this.FlightModeCall.on('data', function(flightModeResponse) {
+            self.flightMode = flightModeResponse.flight_mode;
+            console.log('Flight Mode Update:', self.flightMode);
+        });
+    
+        this.FlightModeCall.on('end', function() {
+            console.log('Flight mode subscription ended');
+        });
+    
+        this.FlightModeCall.on('error', function(e) {
+            console.log(e);
+        });
+    }    
 
     GotoLocation(latitude, longitude, altitude, yaw) {
         const request = {
