@@ -76,6 +76,13 @@ const ToggleButton = styled.button`
   }
 `;
 
+// Wrapper for telemetry data with collapsing/expanding animation
+const TelemetryWrapper = styled.div`
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+  max-height: ${(props) => (props.expanded ? '1000px' : '0')};  // Adjust the max-height as needed
+`;
+
 const Sidebar = ({ ports }) => {
   const [droneData, setDroneData] = useState({});
   const [expandedPorts, setExpandedPorts] = useState({});
@@ -143,47 +150,45 @@ const Sidebar = ({ ports }) => {
             {expandedPorts[port] ? 'Hide Telemetry' : 'Show Telemetry'}
           </ToggleButton>
 
-          {/* Conditionally show telemetry data if the drone's section is expanded */}
-          {expandedPorts[port] && (
-            <div>
-              {/* Health Information */}
-              {droneData[port]?.health && (
-                <div>
-                  <SectionTitle>Health Status</SectionTitle>
-                  <TelemetryItem>Gyrometer Calibrated: {droneData[port].health.is_gyrometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-                  <TelemetryItem>Accelerometer Calibrated: {droneData[port].health.is_accelerometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-                  <TelemetryItem>Magnetometer Calibrated: {droneData[port].health.is_magnetometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-                </div>
-              )}
+          {/* Collapsible section for telemetry data */}
+          <TelemetryWrapper expanded={expandedPorts[port]}>
+            {/* Health Information */}
+            {droneData[port]?.health && (
+              <div>
+                <SectionTitle>Health Status</SectionTitle>
+                <TelemetryItem>Gyrometer Calibrated: {droneData[port].health.is_gyrometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+                <TelemetryItem>Accelerometer Calibrated: {droneData[port].health.is_accelerometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+                <TelemetryItem>Magnetometer Calibrated: {droneData[port].health.is_magnetometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+              </div>
+            )}
 
-              {/* Flight Mode Information */}
-              {droneData[port]?.flightMode && (
-                <div>
-                  <SectionTitle>Flight Mode</SectionTitle>
-                  <SmallTelemetryItem>Current Mode: {droneData[port].flightMode}</SmallTelemetryItem>
-                </div>
-              )}
+            {/* Flight Mode Information */}
+            {droneData[port]?.flightMode && (
+              <div>
+                <SectionTitle>Flight Mode</SectionTitle>
+                <SmallTelemetryItem>Current Mode: {droneData[port].flightMode}</SmallTelemetryItem>
+              </div>
+            )}
 
-              {/* StatusText Information */}
-              {droneData[port]?.statusText && (
-                <div>
-                  <SectionTitle>Status Text</SectionTitle>
-                  <SmallTelemetryItem>Type: {droneData[port].statusText.type}</SmallTelemetryItem>
-                  <SmallTelemetryItem>Message: {droneData[port].statusText.text}</SmallTelemetryItem>
-                </div>
-              )}
+            {/* StatusText Information */}
+            {droneData[port]?.statusText && (
+              <div>
+                <SectionTitle>Status Text</SectionTitle>
+                <SmallTelemetryItem>Type: {droneData[port].statusText.type}</SmallTelemetryItem>
+                <SmallTelemetryItem>Message: {droneData[port].statusText.text}</SmallTelemetryItem>
+              </div>
+            )}
 
-              {/* Battery Information */}
-              {droneData[port]?.battery && (
-                <div>
-                  <SectionTitle>Battery</SectionTitle>
-                  <TelemetryItem>Voltage: {droneData[port].battery.voltage_v || 'N/A'} V</TelemetryItem>
-                  <TelemetryItem>Current: {droneData[port].battery.current_battery_a || 'N/A'} A</TelemetryItem>
-                  <TelemetryItem>Remaining: {droneData[port].battery.remaining_percent || 'N/A'}%</TelemetryItem>
-                </div>
-              )}
-            </div>
-          )}
+            {/* Battery Information */}
+            {droneData[port]?.battery && (
+              <div>
+                <SectionTitle>Battery</SectionTitle>
+                <TelemetryItem>Voltage: {droneData[port].battery.voltage_v || 'N/A'} V</TelemetryItem>
+                <TelemetryItem>Current: {droneData[port].battery.current_battery_a || 'N/A'} A</TelemetryItem>
+                <TelemetryItem>Remaining: {droneData[port].battery.remaining_percent || 'N/A'}%</TelemetryItem>
+              </div>
+            )}
+          </TelemetryWrapper>
         </DroneSection>
       ))}
     </SidebarContainer>
