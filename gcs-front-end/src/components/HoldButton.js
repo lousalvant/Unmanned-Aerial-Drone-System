@@ -42,7 +42,7 @@ function HoldButton({ sendCommandToDrones }) {
       if (!response.ok) {
         throw new Error(`Hold command failed on port ${port}: ${response.statusText}`);
       }
-      return response.json();  // assuming the response body is JSON
+      return response.json();
     })
     .then(data => {
       console.log(`Hold command response for drone on port ${port}:`, data);

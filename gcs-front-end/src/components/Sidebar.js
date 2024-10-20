@@ -49,9 +49,8 @@ const TelemetryItem = styled.div`
   margin-bottom: 5px;
 `;
 
-// New styled component for smaller telemetry text
 const SmallTelemetryItem = styled.div`
-  font-size: 0.75em;  // Adjust the font size to be smaller
+  font-size: 0.75em;
   margin-bottom: 5px;
 `;
 
@@ -67,35 +66,41 @@ const Sidebar = ({ ports }) => {
   useEffect(() => {
     const fetchTelemetryData = async (port) => {
       try {
-          const healthResponse = await fetch(`http://localhost:${port}/health`);
-          const healthJson = await healthResponse.json();
+        const healthResponse = await fetch(`http://localhost:${port}/health`);
+        const healthJson = await healthResponse.json();
 
-          const flightModeResponse = await fetch(`http://localhost:${port}/flight_mode`);
-          const flightModeJson = await flightModeResponse.json();
+        const flightModeResponse = await fetch(`http://localhost:${port}/flight_mode`);
+        const flightModeJson = await flightModeResponse.json();
 
-          const statusTextResponse = await fetch(`http://localhost:${port}/status_text`);
-          const statusTextJson = await statusTextResponse.json();
+        const statusTextResponse = await fetch(`http://localhost:${port}/status_text`);
+        const statusTextJson = await statusTextResponse.json();
 
-          const batteryResponse = await fetch(`http://localhost:${port}/battery`);
-          const batteryJson = await batteryResponse.json();
+        const batteryResponse = await fetch(`http://localhost:${port}/battery`);
+        const batteryJson = await batteryResponse.json();
 
-          setDroneData(prevData => ({
-              ...prevData,
-              [port]: {
-                  health: healthJson,
-                  flightMode: flightModeJson.flight_mode,
-                  statusText: statusTextJson,
-                  battery: batteryJson,
-              }
-          }));
+        setDroneData(prevData => ({
+          ...prevData,
+          [port]: {
+            health: healthJson,
+            flightMode: flightModeJson.flight_mode,
+            statusText: statusTextJson,
+            battery: batteryJson,
+          },
+        }));
       } catch (error) {
-          console.error(`Error fetching telemetry data for port ${port}:`, error);
+        console.error(`Error fetching telemetry data for port ${port}:`, error);
       }
-    };  
+    };
 
-    ports.forEach(port => {
-      fetchTelemetryData(port);
-    });
+    // Set an interval to poll the telemetry data every 2 seconds (adjust the interval as needed)
+    const intervalId = setInterval(() => {
+      ports.forEach(port => {
+        fetchTelemetryData(port);
+      });
+    }, 2000); // 2 seconds interval
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, [ports]);
 
   return (
@@ -115,29 +120,29 @@ const Sidebar = ({ ports }) => {
 
           {/* Health Information */}
           {droneData[port]?.health && (
-              <div>
-                  <SectionTitle>Health Status</SectionTitle>
-                  <TelemetryItem>Gyrometer Calibrated: {droneData[port].health.is_gyrometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-                  <TelemetryItem>Accelerometer Calibrated: {droneData[port].health.is_accelerometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-                  <TelemetryItem>Magnetometer Calibrated: {droneData[port].health.is_magnetometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
-              </div>
+            <div>
+              <SectionTitle>Health Status</SectionTitle>
+              <TelemetryItem>Gyrometer Calibrated: {droneData[port].health.is_gyrometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+              <TelemetryItem>Accelerometer Calibrated: {droneData[port].health.is_accelerometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+              <TelemetryItem>Magnetometer Calibrated: {droneData[port].health.is_magnetometer_calibration_ok ? 'Yes' : 'No'}</TelemetryItem>
+            </div>
           )}
 
           {/* Flight Mode Information */}
           {droneData[port]?.flightMode && (
-              <div>
-                  <SectionTitle>Flight Mode</SectionTitle>
-                  <SmallTelemetryItem>Current Mode: {droneData[port].flightMode}</SmallTelemetryItem>
-              </div>
+            <div>
+              <SectionTitle>Flight Mode</SectionTitle>
+              <SmallTelemetryItem>Current Mode: {droneData[port].flightMode}</SmallTelemetryItem>
+            </div>
           )}
 
           {/* StatusText Information */}
           {droneData[port]?.statusText && (
-              <div>
-                  <SectionTitle>Status Text</SectionTitle>
-                  <SmallTelemetryItem>Type: {droneData[port].statusText.type}</SmallTelemetryItem>
-                  <SmallTelemetryItem>Message: {droneData[port].statusText.text}</SmallTelemetryItem>
-              </div>
+            <div>
+              <SectionTitle>Status Text</SectionTitle>
+              <SmallTelemetryItem>Type: {droneData[port].statusText.type}</SmallTelemetryItem>
+              <SmallTelemetryItem>Message: {droneData[port].statusText.text}</SmallTelemetryItem>
+            </div>
           )}
 
           {/* Battery Information */}
