@@ -84,6 +84,20 @@ const GridContainer = styled.div`
   padding: 20px; /* Add padding to create space around the grid */
 `;
 
+const TopSectionContainer = styled.div`
+  display: flex;
+  justify-content: center;  /* Center both sections */
+  align-items: flex-start;  /* Align them to the top */
+  gap: 20px;  /* Space between the sections */
+  width: 100%;  /* Take up the full width */
+  max-width: 600px;  /* Limit the maximum width to keep them centered */
+  margin: 0 auto;  /* Center the container within the page */
+`;
+
+const MapComponentWrapper = styled.div`
+  flex-shrink: 0;  /* Prevent the map from shrinking */
+`;
+
 const LeaderFollowerSection = styled.div`
   border: 1px solid #ccc;
   padding: 10px;
@@ -94,6 +108,7 @@ const LeaderFollowerSection = styled.div`
   flex-direction: column;
   align-items: center;
   width: 300px;
+  flex-shrink: 0;
 `;
 
 const LeaderFollowerTitle = styled.h3`
@@ -114,20 +129,6 @@ const CheckboxContainer = styled.div`
 
 const FollowerCheckbox = styled.div`
   margin-bottom: 5px;
-`;
-
-const MapContainer = styled.div`
-  flex-grow: 1; /* Allow the map to grow and take available space */
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const MapComponentStyled = styled(MapComponent)`
-  width: 100%;
-  height: 100%;
-  max-height: 100vh; /* Ensure it does not exceed the viewport height */
 `;
 
 function App() {
@@ -258,6 +259,7 @@ function App() {
     <AppContainer>
       <Sidebar ports={activePorts} />
       <MainContent>
+      <TopSectionContainer>
 
          {/* Leader-Follower Section */}
          <LeaderFollowerSection>
@@ -294,6 +296,10 @@ function App() {
             Stop Follow
           </Button>
         </LeaderFollowerSection>
+
+        <MapComponent ports={activePorts} />
+
+      </TopSectionContainer>
 
         <div>
           <label>Select Drone to Control: </label>
@@ -334,10 +340,8 @@ function App() {
           ))}
         </GridContainer>
 
-        {/* <GpsCoords ports={activePorts} /> */}
-        <MapContainer>
-          <MapComponentStyled ports={activePorts} />
-        </MapContainer>
+          
+
       </MainContent>
     </AppContainer>
   );
