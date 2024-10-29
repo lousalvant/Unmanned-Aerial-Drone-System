@@ -100,16 +100,16 @@ const Sidebar = ({ ports }) => {
       try {
         const healthResponse = await fetch(`http://localhost:${port}/health`);
         const healthJson = await healthResponse.json();
-
+  
         const flightModeResponse = await fetch(`http://localhost:${port}/flight_mode`);
         const flightModeJson = await flightModeResponse.json();
-
+  
         const statusTextResponse = await fetch(`http://localhost:${port}/status_text`);
         const statusTextJson = await statusTextResponse.json();
-
+  
         const batteryResponse = await fetch(`http://localhost:${port}/battery`);
         const batteryJson = await batteryResponse.json();
-
+  
         setDroneData(prevData => ({
           ...prevData,
           [port]: {
@@ -123,12 +123,18 @@ const Sidebar = ({ ports }) => {
         console.error(`Error fetching telemetry data for port ${port}:`, error);
       }
     };
-
-    // Fetch telemetry data for each port
-    ports.forEach(port => {
-      fetchTelemetryData(port);
-    });
+  
+    // Fetch telemetry data at a regular interval
+    const intervalId = setInterval(() => {
+      ports.forEach(port => {
+        fetchTelemetryData(port);
+      });
+    }, 1000); // Poll every second, adjust as needed
+  
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
   }, [ports]);
+  
 
   return (
     <SidebarContainer>
