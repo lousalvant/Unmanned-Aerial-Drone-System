@@ -1,96 +1,145 @@
 import numpy as np
 
+def wrap_to_180(angle):
+    """
+    Wrap angle to [-180, 180] degrees.
+    """
+    return ((angle + 180) % 360) - 180
+
 def col_avoid(dq, q, dcoll, rcoll):
+    """
+    Distributed collision avoidance by rotating the control vectors.
+
+    Parameters:
+    - q (numpy.ndarray): Aggregate coordinate vector (2n,)
+    - dq (numpy.ndarray): Control direction vector (2n,)
+    - dcoll (float): Collision avoidance activation distance
+    - rcoll (float): Collision avoidance circle radius
+
+    Returns:
+    - u (numpy.ndarray): Modified control vector (2n,)
+    - n (int): Number of agents
+    - colIdx (numpy.ndarray): Collision avoidance index matrix (n, n)
+    - Dc (numpy.ndarray): Matrix of inter-agent distances (n, n)
+    """
+
     # Number of agents
     n = len(q) // 2
-    
-    # Reshape q and dq into 2D matrices
-    qm = np.array(q).reshape(2, n, order='F')
-    ctrl = np.array(dq).reshape(2, n, order='F')
 
-    # Inter-agent distance matrix
+    # Coordinates in matrix form (2 x n)
+    qm = np.asarray(q).reshape((2, n), order='F').astype(float)
+
+    # Control in matrix form (2 x n)
+    ctrl = np.asarray(dq).reshape((2, n), order='F').astype(float)
+
+    # Initialize inter-agent distance matrix
     Dc = np.zeros((n, n))
+
+    # Compute pairwise distances
     for i in range(n):
         for j in range(i + 1, n):
-            Dc[i, j] = np.linalg.norm(qm[:, i] - qm[:, j], 2)
-    Dc = Dc + Dc.T  # Make symmetric
+            Dc[i, j] = np.linalg.norm(qm[:, i] - qm[:, j])
 
-    # Collision avoidance index matrix
+    # Make the distance matrix symmetric
+    Dc += Dc.T
+
+    # Collision avoidance indices (boolean matrix)
     colIdx = Dc < dcoll
-    np.fill_diagonal(colIdx, 0)  # Set diagonal to 0, no self-collisions
 
-    # Flag to stop movement if no safe direction is found
+    # Remove self-collision by setting diagonal to False
+    np.fill_diagonal(colIdx, False)
+
+    # Initialize stop flag array
     stopFlag = np.zeros(n, dtype=bool)
 
-    # Loop over each UAV to adjust its control vector
-    for i in range(n):
-        coneAng = []
+    for i in range(n):  # Iterate over each agent
+        cone_ang = []  # List to store collision cone angles as [thtm, thtp]
 
-        # Find angles of collision cones
+        # Find collision cones based on neighbors
         for k in range(n):
             if colIdx[i, k]:
-                dnb = Dc[i, k]
-                vec = qm[:, k] - qm[:, i]
-                tht = np.degrees(np.arctan2(vec[1], vec[0]))
+                dnb = Dc[i, k]  # Distance to neighbor
+                vec = qm[:, k] - qm[:, i]  # Vector from agent i to neighbor k
+                tht = np.degrees(np.arctan2(vec[1], vec[0]))  # Angle of connecting vector
 
-                # Vertex half-angle of the collision cone
+                # 'alp' is the vertex half-angle of the collision cone
                 if dnb <= dcoll:
-                    alp = 90
+                    alp = 90.0
                 else:
-                    alp = np.degrees(np.arcsin(rcoll / dnb))
+                    # Prevent domain error in arcsin
+                    ratio = rcoll / dnb
+                    ratio = np.clip(ratio, -1.0, 1.0)
+                    alp = np.abs(np.degrees(np.arcsin(ratio)))
 
-                # Cone boundaries
+                # Angles of the cone sides
                 thtm = tht - alp
                 thtp = tht + alp
 
-                # Adjust angles to be within [-180, 180] range
-                if thtm < -180:
-                    coneAng.append([thtm + 360, 180])
-                    coneAng.append([-180, thtp])
-                elif thtp > 180:
-                    coneAng.append([-180, thtp - 360])
-                    coneAng.append([thtm, 180])
+                # Wrap angles to [-180, 180]
+                thtm_wrapped = wrap_to_180(thtm)
+                thtp_wrapped = wrap_to_180(thtp)
+
+                # Handle angle wrapping across -180 or 180 degrees
+                if thtm_wrapped < -180:
+                    cone_ang.append([-180, wrap_to_180(thtp_wrapped)])
+                    cone_ang.append([thtm_wrapped + 360, 180])
+                elif thtp_wrapped > 180:
+                    cone_ang.append([thtm_wrapped, 180])
+                    cone_ang.append([-180, wrap_to_180(thtp_wrapped - 360)])
+                elif thtm_wrapped > thtp_wrapped:
+                    # Collision cone wraps around the -180/180 boundary
+                    cone_ang.append([thtm_wrapped, 180])
+                    cone_ang.append([-180, thtp_wrapped])
                 else:
-                    coneAng.append([thtm, thtp])
+                    cone_ang.append([thtm_wrapped, thtp_wrapped])
 
-        # Adjust control vector if necessary
-        if np.any(colIdx[i, :]):
-            thtC = np.degrees(np.arctan2(ctrl[1, i], ctrl[0, i]))  # Current control vector angle
+        if np.any(colIdx[i, :]):  # If collision avoidance is needed
+            # Control vector angle in world coordinate frame
+            thtC = np.degrees(np.arctan2(ctrl[1, i], ctrl[0, i]))
 
-            # Check if the control vector is within any collision cone
-            if any([thtm <= thtC <= thtp for thtm, thtp in coneAng]):
-                # Search for feasible directions
-                angs = np.arange(-180, 181, 5)  # Candidate directions
-                angsIdx = np.ones_like(angs, dtype=bool)
+            # Check if control vector is inside any collision cone
+            inside_cone = False
+            for cone in cone_ang:
+                if cone[0] <= thtC <= cone[1]:
+                    inside_cone = True
+                    break
 
-                # Mark angles inside the collision cones
-                for thtm, thtp in coneAng:
-                    angsIdx &= ~((angs >= thtm) & (angs <= thtp))
+            if inside_cone:
+                # Possible motion directions to test
+                angs = np.arange(-180, 185, 5)  # From -180 to 180 inclusive, step 5
+                angs_idx = np.ones_like(angs, dtype=bool)  # Start with all True
 
-                angsFeas = angs[angsIdx]
+                # Determine which angles are inside the collision cones
+                for idx, r in enumerate(angs):
+                    for cone in cone_ang:
+                        if cone[0] <= r <= cone[1]:
+                            angs_idx[idx] = False
+                            break
 
-                if len(angsFeas) == 0:
+                angs_feas = angs[angs_idx]  # Feasible directions to take
+
+                # If there is no feasible angle, stop
+                if angs_feas.size == 0:
                     stopFlag[i] = True
-
-                # Find the closest feasible direction
-                thtDiff = np.abs(np.degrees(np.arctan2(np.sin(np.radians(thtC - angsFeas)),
-                                                      np.cos(np.radians(thtC - angsFeas)))))
-                minIdx = np.argmin(thtDiff)
-                thtCnew = angsFeas[minIdx]
-
-                # Stop if direction change is too large
-                if np.abs(np.degrees(np.arctan2(np.sin(np.radians(thtCnew - thtC)),
-                                                np.cos(np.radians(thtCnew - thtC))))) >= 90:
-                    stopFlag[i] = True
-
-                # Modify control vector
-                if stopFlag[i]:
-                    ctrl[:, i] = np.zeros(2)
                 else:
-                    ctrl[:, i] = np.linalg.norm(ctrl[:, i]) * np.array([np.cos(np.radians(thtCnew)),
-                                                                        np.sin(np.radians(thtCnew))])
+                    # Find closest non-colliding control direction
+                    tht_diff = np.abs(wrap_to_180(thtC - angs_feas))
+                    min_idx = np.argmin(tht_diff)
+                    thtCnew = angs_feas[min_idx]
 
-    # Flatten the modified control vector for output
+                    # Check if the feasible control direction is within +-90 degrees
+                    if np.abs(wrap_to_180(thtCnew - thtC)) >= 90:
+                        stopFlag[i] = True
+
+                    # Modify control vector
+                    if stopFlag[i]:
+                        ctrl[:, i] = np.zeros(2)
+                    else:
+                        ctrl_norm = np.linalg.norm(ctrl[:, i])
+                        ctrl[:, i] = ctrl_norm * np.array([np.cos(np.radians(thtCnew)),
+                                                           np.sin(np.radians(thtCnew))])
+
+    # Flatten the control matrix back to a vector in column-major order
     u = ctrl.flatten(order='F')
-    
+
     return u, n, colIdx, Dc

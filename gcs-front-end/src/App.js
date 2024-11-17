@@ -12,6 +12,7 @@ import HoldButton from './components/HoldButton';
 import MissionComponent from './components/MissionComponent';
 import DroneFeedback from './components/FeedbackComponent';
 import Sidebar from './components/Sidebar';
+import FormationControlButton from './components/FormationControlButton';
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
 
@@ -327,6 +328,8 @@ function App() {
           <DoOrbitButton sendCommandToDrones={sendCommandToDrones} />
           <MissionComponent sendCommandToDrones={sendCommandToDrones} />
         </ControlSectionContainer>
+
+        <FormationControlButton />
 
         {/* Toggle logs visibility */}
         <Button onClick={() => setShowLogs(!showLogs)}>

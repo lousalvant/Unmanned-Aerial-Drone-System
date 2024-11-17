@@ -1,17 +1,12 @@
-# Vision-based formation control of quadrotors in AirSim.
-
-# Notes:
-# The simulation environment in UE4 must be running before executing this code.
+# Note: The simulation environment in UE4 must be running before executing this code.
 
 import airsim
 import numpy as np
 import time
 
 from FindGains import find_gains
-from GetRelativePose import get_relative_pose
 from ColAvoid import col_avoid
 
-# Desired formation parameters
 # Total number of UAVs
 numUAV = 3
 
@@ -28,8 +23,7 @@ Adjm = np.array([
     [1, 1, 0]
 ], dtype=float)
 
-# Initial positions of the quads
-# Note: This must match the settings file
+# Initial positions of the quads (Note: This must match the settings file)
 pos0 = np.zeros((numUAV, 3))
 for i in range(numUAV):
     pos0[i, 0] = 0
@@ -38,6 +32,8 @@ for i in range(numUAV):
 
 # Find formation control gains
 Am = find_gains(qs, Adjm)
+print(Am)
+
 A = np.asarray(Am)
 print("Gain matrix calculated.")
 
@@ -84,24 +80,11 @@ rcoll = 0.7  # Collision avoidance circle radius
 gain = 1.0 / 3  # Control gain
 alt = -20.0  # UAV altitude
 duration = 0.5  # Max duration for applying input
-vmax = 0.1  # Saturation velocity
-save = 0  # Set to 1 to save onboard images, otherwise set to 0
+vmax = 0.4  # Saturation velocity
+save = 0  # Set to 1 to save control input
 
 # Initial Pause time
 time.sleep(0.5)
-
-# Get Image data (Initialization)
-for i in range(numUAV):
-    name = f"UAV{i+1}"
-    imgs = client.simGetImages([
-        airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)], vehicle_name=name)
-    img = imgs[0]
-    if i == 0:
-        imgArray = img.image_data_uint8
-    else:
-        imgArray += img.image_data_uint8
-imgWidth = img.width
-imgHeight = img.height
 
 # Formation control
 itr = 0
@@ -110,81 +93,54 @@ while True:
     itr += 1
     print("itr =", itr)
 
-    # Get UAV positions for collision avoidance
-    q = np.zeros(3 * numUAV)  # Preallocate state vectors
-    qo = np.zeros(4 * numUAV)  # Preallocate orientation vectors
-    qxy = np.zeros(2 * numUAV)
+    # Get UAV positions using GPS data
+    q = np.zeros(3 * numUAV)      # State vector (x, y, z) for all UAVs
+    qxy = np.zeros(2 * numUAV)    # State vector (x, y) for all UAVs
     for i in range(numUAV):
-        name = "UAV" + str(i + 1)
+        name = f"UAV{i+1}"
+        state = client.getMultirotorState(vehicle_name=name)
+        pos = state.kinematics_estimated.position
+        qi = np.array([pos.x_val, pos.y_val, pos.z_val]) + pos0[i, :]
+        q[3 * i:3 * i + 3] = qi
+        qxy[2 * i:2 * i + 2] = qi[:2]
 
-        # Get x-y-z coordinates
-        pos = client.simGetGroundTruthKinematics(vehicle_name=name)
-        qi = np.array([pos.position.x_val, pos.position.y_val, pos.position.z_val])
-        qoi = np.array([pos.orientation.w_val, pos.orientation.x_val, pos.orientation.y_val, pos.orientation.z_val])
-
-        # Add initial coordinates
-        qd = qi + pos0[i, :]
-
-        # 3D and 2D state vector
-        q[3 * i:3 * i + 3] = qd.copy()
-        qxy[2 * i:2 * i + 2] = np.array([qd[0], qd[1]])
-        qo[4 * i:4 * i + 4] = qoi.copy()
-
-    # Estimate relative positions using onboard images
+    # Compute relative positions
+    T = np.zeros((numUAV * numUAV, 3))
     for i in range(numUAV):
-        name = "UAV" + str(i + 1)
-        imgs = client.simGetImages([
-            airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)], vehicle_name=name)
-        img = imgs[0]
-        if i == 0:
-            imgArray = img.image_data_uint8
-        else:
-            imgArray += img.image_data_uint8
+        for j in range(numUAV):
+            if Adjm[i, j] == 1:
+                rel_pos = q[3 * j:3 * j + 3] - q[3 * i:3 * i + 3]
+                T[i * numUAV + j, :] = rel_pos
+            else:
+                T[i * numUAV + j, :] = np.zeros(3)
 
-    # Estimate relative positions using onboard images
-    Qm, Tm, flagm = get_relative_pose(imgArray, imgWidth, imgHeight, save, Adjm, itr)
-    T = np.asarray(Tm)
-    flag = np.asarray(flagm).flatten()
-
-    # Transform recovered coordinates to world frame in order to apply the control.
-    # AirSim uses NED (North-East-Down) frame, and the front camera has EDN 
-    # (East-Down-North) frame. So we need to swap columns of T.
-    Tw = np.array([T[:, 2], T[:, 0], T[:, 1]]).T
-
-    # Calculate distributed control
-    dqxy = np.zeros(2 * numUAV)  # Preallocate vectors
+    # Control computation
+    dqxy = np.zeros(2 * numUAV)  # Preallocate control input vector
     for i in range(numUAV):
-        if flag[i] == 1:
-            # 3D and 2D state vector
-            qi = Tw[i * numUAV: (i + 1) * numUAV, :].flatten()
-            qxyi = Tw[i * numUAV: (i + 1) * numUAV, 0:2].flatten()
-
-            # Control
-            dqxyi = A[i * 2: i * 2 + 2, :].dot(qxyi)
-            dqxy[2 * i:2 * i + 2] = gain * dqxyi
-    if save == 1:
-        np.save("SavedData/u" + str(itr), dqxy)  # Save control
+        # Extract relative positions in 2D (x, y) for UAV i
+        qxyi = T[i * numUAV: (i + 1) * numUAV, 0:2].flatten()
+        # Control input calculation
+        dqxyi = A[2 * i: 2 * i + 2, :].dot(qxyi)
+        dqxy[2 * i:2 * i + 2] = gain * dqxyi
 
     # Collision avoidance
-    um, _, _, _ = col_avoid(dqxy.tolist(), qxy.tolist(), dcoll, rcoll)
-    u = np.asarray(um).flatten()
+    u, n, colIdx, Dc = col_avoid(dqxy.tolist(), qxy.tolist(), dcoll, rcoll)
+    u = np.asarray(u).flatten()
 
     # Saturate velocity control command
     for i in range(numUAV):
-        # Find norm of control vector for each UAV
         ui = u[2 * i:2 * i + 2]
         vel = np.linalg.norm(ui)
         if vel > vmax:
-            u[2 * i:2 * i + 2] = (vmax / vel) * u[2 * i:2 * i + 2]
-    if save == 1:
-        np.save("SavedData/um" + str(itr), u)  # Save modified control
+            u[2 * i:2 * i + 2] = (vmax / vel) * ui
 
-    # Apply control command    
+    if save == 1:
+        np.save("SavedData/u" + str(itr), dqxy)  # Save control input before collision avoidance
+        np.save("SavedData/um" + str(itr), u)    # Save modified control input
+
+    # Apply control command
     for i in range(numUAV):
-        name = "UAV" + str(i + 1)
-        client.moveByVelocityZAsync(u[2 * i], u[2 * i + 1], alt, duration, vehicle_name=name)  # Motion at fixed altitude
+        name = f"UAV{i+1}"
+        client.moveByVelocityZAsync(u[2 * i], u[2 * i + 1], alt, duration, vehicle_name=name)
 
     print()
-
-# Terminate
-client.reset()

@@ -40,6 +40,26 @@ const trimLogs = () => {
     }
 };
 
+const { exec } = require('child_process');
+
+// Formation Control Endpoint
+app.post('/formation_control', (req, res) => {
+    console.log("Starting formation control...");
+
+    exec("python3 /home/lou/Web-GCS/FormationControl/FormationControl.py", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Execution error: ${error.message}`);
+            res.status(500).send("Error starting formation control.");
+            return;
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+        }
+        console.log(`Stdout: ${stdout}`);
+        res.send("Formation control started successfully.");
+    });
+});
+
 app.get('/logs', function (req, res) {
     res.json(logs); // Send the logs as JSON
 });
