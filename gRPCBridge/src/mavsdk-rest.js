@@ -46,7 +46,7 @@ const { exec } = require('child_process');
 app.post('/formation_control', (req, res) => {
     console.log("Starting formation control...");
 
-    exec("python3 /home/lou/Web-GCS/FormationControl/FormationControl.py", (error, stdout, stderr) => {
+    exec("python3 /home/lou/Web-GCS/FormationControl/FormationControlMavsdk.py", (error, stdout, stderr) => {
         if (error) {
             console.error(`Execution error: ${error.message}`);
             res.status(500).send("Error starting formation control.");
