@@ -38,7 +38,7 @@ A = np.asarray(Am)
 print("Gain matrix calculated.")
 
 # Connect to the AirSim simulator
-client = airsim.MultirotorClient()
+client = airsim.MultirotorClient(ip="10.0.0.139")
 client.confirmConnection()
 
 for i in range(numUAV):
