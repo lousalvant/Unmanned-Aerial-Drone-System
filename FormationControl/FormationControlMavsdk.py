@@ -44,6 +44,8 @@ async def init_drone(port):
         if state.is_connected:
             print(f"Drone on port {port} connected")
             break
+    # Increase telemetry update rates
+    await drone.telemetry.set_rate_position_velocity_ned(10)
     return drone
 
 async def setup_drones():
@@ -59,49 +61,54 @@ async def arm_and_takeoff(drone, altitude):
     await drone.action.arm()
     print("Taking off...")
     await drone.action.takeoff()
-    await asyncio.sleep(5)
+    await asyncio.sleep(5)  # Allow the drone to stabilize after takeoff
     print(f"Ascending to altitude {altitude}m")
-    # Start offboard mode
-    await start_offboard_mode(drone)
+
     # Command drone to move to desired altitude
+    await start_offboard_mode(drone)
     await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, altitude, 0.0))
-    # Wait until drone reaches altitude
-    while True:
-        async for position in drone.telemetry.position_velocity_ned():
-            current_altitude = position.position.down_m
-            if abs(current_altitude - altitude) < 0.5:
-                print("Reached target altitude")
-                break
-            await asyncio.sleep(0.5)
-        break
+
+    # Wait until the drone reaches altitude
+
+    # Altitude smoothing to help mitigate noise or fluctuations in telemetry data
+    smoothed_altitude = 0.0
+    alpha = 0.9  # Smoothing factor
+
+    async for position in drone.telemetry.position_velocity_ned():
+        current_altitude = position.position.down_m
+        smoothed_altitude = alpha * smoothed_altitude + (1 - alpha) * current_altitude
+        print(f"Smoothed altitude: {smoothed_altitude}")
+        if abs(smoothed_altitude - altitude) < 0.5:
+            print("Reached target altitude")
+            break
+        await asyncio.sleep(0.1)
     await asyncio.sleep(2)
 
 async def start_offboard_mode(drone):
-    # Set initial setpoints before starting offboard mode
     print("Sending initial setpoints...")
-    for _ in range(10):
+    for _ in range(40):  # Increase iterations to ensure PX4 accepts offboard mode
         await drone.offboard.set_velocity_ned(VelocityNedYaw(0.0, 0.0, 0.0, 0.0))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.025)  # Increase frequency of sending commands
     try:
         await drone.offboard.start()
         print("Offboard mode started")
     except OffboardError as e:
         print(f"Offboard start failed: {e._result.result}")
         await drone.action.disarm()
+        raise
 
 async def formation_control(drones):
     # Formation control parameters
-    dcoll = 1.5  # Collision avoidance activation distance
-    rcoll = 0.7  # Collision avoidance circle radius
-    gain = 1.0 / 3  # Control gain
-    alt = -20.0  # UAV altitude (negative in NED)
-    duration = 0.5  # Max duration for applying input
-    vmax = 0.4  # Saturation velocity
-    save = 0  # Set to 1 to save control input
+    dcoll = 3.0  # Collision avoidance activation distance
+    rcoll = 1.0  # Collision avoidance circle radius
+    gain = 1.0 / 16  # Control gain
+    duration = 0.2  # Max duration for applying input
+    vmax = 0.6  # Saturation velocity
+    velocity_damping = 0.9  # Reduce oscillation by dampening velocity
+    error_threshold = 0.01  # Dead zone for small errors
 
     itr = 0
-
-    # Offboard mode is already started in arm_and_takeoff()
+    previous_positions = np.zeros((numUAV, 3))
 
     while True:
         itr += 1
@@ -110,14 +117,13 @@ async def formation_control(drones):
         # Get UAV positions
         q = np.zeros(3 * numUAV)      # State vector (x, y, z) for all UAVs
         qxy = np.zeros(2 * numUAV)    # State vector (x, y) for all UAVs
-
-        # Fetch positions asynchronously
         tasks = [get_position(drone, idx) for idx, drone in enumerate(drones)]
         positions = await asyncio.gather(*tasks)
 
         for i, pos in enumerate(positions):
-            # pos is (north_m, east_m, down_m)
-            qi = np.array([pos[0], pos[1], pos[2]]) + pos0[i, :]
+            smooth_pos = 0.95 * previous_positions[i] + 0.05 * np.array(pos)
+            previous_positions[i] = smooth_pos
+            qi = smooth_pos + pos0[i, :]
             q[3 * i:3 * i + 3] = qi
             qxy[2 * i:2 * i + 2] = qi[:2]
 
@@ -132,11 +138,9 @@ async def formation_control(drones):
                     T[i * numUAV + j, :] = np.zeros(3)
 
         # Control computation
-        dqxy = np.zeros(2 * numUAV)  # Preallocate control input vector
+        dqxy = np.zeros(2 * numUAV)
         for i in range(numUAV):
-            # Extract relative positions in 2D (x, y) for UAV i
             qxyi = T[i * numUAV: (i + 1) * numUAV, 0:2].flatten()
-            # Control input calculation
             dqxyi = A[2 * i: 2 * i + 2, :].dot(qxyi)
             dqxy[2 * i:2 * i + 2] = gain * dqxyi
 
@@ -144,23 +148,34 @@ async def formation_control(drones):
         u, n, colIdx, Dc = col_avoid(dqxy.tolist(), qxy.tolist(), dcoll, rcoll)
         u = np.asarray(u).flatten()
 
-        # Saturate velocity control command
+        # Gradual velocity scaling
+        velocity_scaling_factor = min(1.0, itr / 125)
+        u = velocity_scaling_factor * u
+
+        # Predict future positions and enforce separation
+        qxy_reshaped = qxy.reshape(numUAV, 2)
+        future_positions = qxy_reshaped + duration * u.reshape(numUAV, 2)
+        for i in range(numUAV):
+            for j in range(i + 1, numUAV):
+                future_distance = np.linalg.norm(future_positions[i] - future_positions[j])
+                if future_distance < rcoll * 2:
+                    u[2 * i:2 * i + 2] = 0.0
+                    u[2 * j:2 * j + 2] = 0.0
+
+        # Apply damping
+        u = velocity_damping * u
+
+        # Saturate velocity and apply dead zone
         for i in range(numUAV):
             ui = u[2 * i:2 * i + 2]
-            vel = np.linalg.norm(ui)
-            if vel > vmax:
-                u[2 * i:2 * i + 2] = (vmax / vel) * ui
-
-        if save == 1:
-            np.save("SavedData/u" + str(itr), dqxy)  # Save control input before collision avoidance
-            np.save("SavedData/um" + str(itr), u)    # Save modified control input
+            distance = np.linalg.norm(ui)
+            if distance > 0:
+                u[2 * i:2 * i + 2] *= min(1.0, distance / vmax)
+            if distance < error_threshold:
+                u[2 * i:2 * i + 2] = 0.0
 
         # Apply control command
-        tasks = []
-        for i, drone in enumerate(drones):
-            ui = u[2 * i:2 * i + 2]
-            tasks.append(send_velocity(drone, ui[0], ui[1], 0.0))  # Down velocity is zero
-
+        tasks = [send_velocity(drone, u[2 * i], u[2 * i + 1], 0.0) for i, drone in enumerate(drones)]
         await asyncio.gather(*tasks)
         await asyncio.sleep(duration)
 
