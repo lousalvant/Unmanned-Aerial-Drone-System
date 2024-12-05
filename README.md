@@ -8,3 +8,12 @@ The Web GCS is a browser-based Ground Control Station designed to manage drones 
 Clone the PX4 repository to set up the drone simulator:
 ```bash
 git clone https://github.com/PX4/PX4-Autopilot.git --recursive
+
+2. Install MAVSDK
+Follow the MAVSDK Quickstart Guide to set up MAVSDK.
+
+Clone the MAVSDK repository:
+
+bash
+Copy code
+git clone https://github.com/mavlink/MAVSDK
