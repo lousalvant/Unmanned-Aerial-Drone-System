@@ -1,25 +1,10 @@
-# Getting Started with WebGCS
+# Web-Based Ground Control Station
 
-sudo apt install npm
+## Overview
+The Web GCS is a browser-based Ground Control Station designed to manage drones using MAVSDK for drone communication. This project simplifies drone operations by providing an intuitive React-based frontend, a gRPC-to-REST bridge, and seamless integration with PX4 and AirSim simulators.
 
-git submodule update --init --recursive
-
-Download and install the latest version of MAVSDK from [here](https://mavsdk.mavlink.io/main/en/cpp/guide/installation.html).
-
-
-cd gRPCBridge
-npm install express
-cd ..
-npm install react-scripts
-
-# To run the backend
-node gRPCBridge/src/mavsdk-rest.js
-
-The backend will try to connect to a mavsdk_server on port 50000. Example command to start mavsdk server and connect to gazebo installation: 
-
-./mavsdk_server_manylinux2010-x64 udp://:14550 -p 50000
-
-
-# To run the frontend
-cd gcs-front-end
-npm start
+## Installation Guide
+1. Install PX4
+Clone the PX4 repository to set up the drone simulator:
+```bash
+git clone https://github.com/PX4/PX4-Autopilot.git --recursive
